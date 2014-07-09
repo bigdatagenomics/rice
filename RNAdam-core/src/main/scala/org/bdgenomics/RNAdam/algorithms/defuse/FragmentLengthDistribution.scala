@@ -20,7 +20,6 @@ package org.bdgenomics.RNAdam.algorithms.defuse
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.bdgenomics.adam.rich.RichADAMRecord._
-import org.bdgenomics.adam.rich.RichADAMRecord
 import org.bdgenomics.formats.avro.ADAMRecord
 
 object FragmentLengthDistribution extends Serializable {
@@ -29,7 +28,7 @@ object FragmentLengthDistribution extends Serializable {
    * Calculates a fragment length distribution, and excludes outliers given an
    * alpha parameter.
    *
-   * @param rdd An RDD of ADAM reads.
+   * @param reads An RDD of ADAM reads.
    * @param alpha The top/bottom % of reads to exclude.
    * @param sampleBy Optional down-sampling parameter. Default is not to sample.
    * @return (l_{min}, l_{max}): Return the min and max length.

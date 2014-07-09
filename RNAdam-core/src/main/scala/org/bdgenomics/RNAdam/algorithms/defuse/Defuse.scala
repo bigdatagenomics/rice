@@ -41,7 +41,7 @@ object Defuse {
    * Calculates a fragment length distribution, and excludes outliers given an
    * alpha parameter.
    *
-   * @param rdd An RDD of ADAM reads.
+   * @param concordantRecords An RDD of ADAM reads.
    * @param alpha The top/bottom % of reads to exclude.
    * @return (l_{min}, l_{max}): Return the min and max length.
    */
