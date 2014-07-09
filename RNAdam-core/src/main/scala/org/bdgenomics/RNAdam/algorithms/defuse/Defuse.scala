@@ -19,8 +19,8 @@ package org.bdgenomics.RNAdam.algorithms.defuse
 
 import org.apache.spark.graphx.Graph
 import org.apache.spark.rdd.RDD
-import org.bdgenomics.RNAdam.models.{ ApproximateFusionEvent, FusionEvent }
 import org.bdgenomics.formats.avro.ADAMRecord
+import org.bdgenomics.RNAdam.models.{ ApproximateFusionEvent, FusionEvent }
 
 object Defuse {
   def run(records: RDD[ADAMRecord],
@@ -37,8 +37,16 @@ object Defuse {
   def classify(records: RDD[ADAMRecord]): (RDD[ADAMRecord], RDD[ADAMRecord], RDD[ADAMRecord]) =
     ???
 
+  /**
+   * Calculates a fragment length distribution, and excludes outliers given an
+   * alpha parameter.
+   *
+   * @param rdd An RDD of ADAM reads.
+   * @param alpha The top/bottom % of reads to exclude.
+   * @return (l_{min}, l_{max}): Return the min and max length.
+   */
   def findPercentiles(concordantRecords: RDD[ADAMRecord], alpha: Double): (Long, Long) =
-    ???
+    FragmentLengthDistribution.findPercentiles(concordantRecords, alpha)
 
   def buildGraph(spanningRecords: RDD[ADAMRecord], lmax: Long): Graph[ADAMRecord, ApproximateFusionEvent] =
     ???
