@@ -21,7 +21,6 @@ import org.apache.spark.graphx.Graph
 import org.apache.spark.rdd.RDD
 import org.bdgenomics.RNAdam.models.{ ApproximateFusionEvent, FusionEvent, ReadPair }
 import org.bdgenomics.formats.avro.ADAMRecord
-import org.bdgenomics.RNAdam.models.{ ApproximateFusionEvent, FusionEvent }
 
 object Defuse {
   def run(records: RDD[ADAMRecord],
@@ -36,9 +35,16 @@ object Defuse {
   }
 
   /**
-   * Anita and Dennis are working on this...
-   * @param records
-   * @return
+   * This will classify the Record into Concordant, Spanning, and Split Reads.
+   *
+   * From the deFuse paper:
+   *   - `Concordant Read`: both ends have the same Contig name.
+   *   - `Spanning Read`: both ends are mapped, but do not have the same Contig name.
+   *   - `Split Read`: one end is mapped but the other is not mapped.
+   * @param records These are the records to be bucketed and categorized.
+   * @return        (Concordant Reads, Spanning Reads, Split Reads)
+   * @author anitacita99
+   *         dcunningham
    */
   def classify(records: RDD[ADAMRecord]): (RDD[ReadPair], RDD[ReadPair], RDD[ReadPair]) =
     ???
@@ -55,31 +61,30 @@ object Defuse {
     FragmentLengthDistribution.findPercentiles(concordantRecords, alpha)
 
   /**
-   * Frank is working on this...
-   * @param spanningRecords
-   * @param lmax
-   * @return
+   * This will construct the graph which contains the read pairs and the approximate fusion event.
+   * @param spanningRecords These are the pairs of values which are spanning reads.
+   * @param lmax            This is the maximum considered length for the insert
+   * @author fnothaft
    */
-  def buildGraph(spanningRecords: RDD[ReadPair], lmax: Long): Graph[ReadPair, ApproximateFusionEvent] =
+  def buildGraph(spanningRecords: RDD[ReadPair], lmax: Long): RDD[(ApproximateFusionEvent, Seq[ReadPair])] =
     ???
 
   /**
-   * Timothy is working on this...
-   *
-   * @param graph
-   * @return
+   * Calculate the fusions which are considered to have the most support from the Spanning Reads.
+   * @param graph A graph of the Spanning Reads and the Fusion Events
+   * @return The fusion events which have the most support
+   * @author tdanford
    */
-  def bestFusions(graph: Graph[ReadPair, ApproximateFusionEvent]): RDD[ApproximateFusionEvent] =
+  def bestFusions(graph: RDD[(ApproximateFusionEvent, Seq[ReadPair])]): RDD[ApproximateFusionEvent] =
     ???
 
   /**
-   * Carl is working on this...
-   *
    * @param fusions
    * @param splitRecords
    * @param lmin
    * @param lmax
    * @return
+   * @author carlyeks
    */
   def assignSplitsToFusions(fusions: RDD[ApproximateFusionEvent], splitRecords: RDD[ReadPair], lmin: Long, lmax: Long): RDD[(ApproximateFusionEvent, ReadPair)] =
     ???
