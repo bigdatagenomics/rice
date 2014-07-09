@@ -17,9 +17,8 @@
  */
 package org.bdgenomics.RNAdam.algorithms.defuse
 
-import org.apache.spark.graphx.Graph
 import org.apache.spark.rdd.RDD
-import org.bdgenomics.RNAdam.models.{ ApproximateFusionEvent, FusionEvent, ReadPair }
+import org.bdgenomics.RNAdam.models.{ApproximateFusionEvent, FusionEvent, ReadPair}
 import org.bdgenomics.formats.avro.ADAMRecord
 
 object Defuse {
@@ -92,6 +91,6 @@ object Defuse {
   def findExactBoundaryForFusions(splitRecordToFusions: RDD[(ApproximateFusionEvent, ReadPair)]): RDD[(ApproximateFusionEvent, FusionEvent)] =
     ???
 
-  def trueFusions(graph: Graph[ReadPair, ApproximateFusionEvent], exactFusions: RDD[(ApproximateFusionEvent, FusionEvent)]): RDD[FusionEvent] =
+  def trueFusions(graph: RDD[(ApproximateFusionEvent, Seq[ReadPair])], exactFusions: RDD[(ApproximateFusionEvent, FusionEvent)]): RDD[FusionEvent] =
     ???
 }
