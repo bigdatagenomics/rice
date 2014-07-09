@@ -18,9 +18,9 @@
 package org.bdgenomics.RNAdam.algorithms.cliques
 
 private[cliques] case class CliqueVertex[VD](data: VD,
-    neighbors: Seq[Long],
-    cliques: Seq[Clique],
-    vid: Long) {
+                                             neighbors: Seq[Long],
+                                             cliques: Seq[Clique],
+                                             vid: Long) {
 
   override def toString(): String = {
     "value: " + data.toString + " neighbors: " + neighbors.toString + " cliques: " + cliques

@@ -29,6 +29,6 @@ case class Clique(nodes: Set[Long]) {
 
   override def equals(o: Any): Boolean = o match {
     case (c: Clique) => c.nodes == nodes
-    case _ => false
+    case _           => false
   }
 }
