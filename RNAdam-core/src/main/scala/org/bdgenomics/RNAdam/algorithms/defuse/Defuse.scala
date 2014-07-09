@@ -19,12 +19,12 @@ package org.bdgenomics.RNAdam.algorithms.defuse
 
 import org.apache.spark.graphx.Graph
 import org.apache.spark.rdd.RDD
-import org.bdgenomics.RNAdam.models.FusionEvent
+import org.bdgenomics.RNAdam.models.{ ApproximateFusionEvent, FusionEvent }
 import org.bdgenomics.formats.avro.ADAMRecord
 
 object Defuse {
   def run(records: RDD[ADAMRecord],
-    alpha: Double): RDD[FusionEvent] = {
+          alpha: Double): RDD[FusionEvent] = {
     val (concordant, spanning, split) = classify(records)
     val (lmin, lmax) = findPercentiles(concordant, alpha)
     val graph = buildGraph(spanning, lmax)
@@ -49,7 +49,7 @@ object Defuse {
   def assignSplitsToFusions(fusions: RDD[ApproximateFusionEvent], splitRecords: RDD[ADAMRecord], lmin: Long, lmax: Long): RDD[(ApproximateFusionEvent, ADAMRecord)] =
     ???
 
-  def findExactBoundaryForFusions(splitRecordToFusions: RDD[(ApproximateFusionEvent, ADAMRecord)]): RDD[(FusionEvent, FusionEvent)] =
+  def findExactBoundaryForFusions(splitRecordToFusions: RDD[(ApproximateFusionEvent, ADAMRecord)]): RDD[(ApproximateFusionEvent, FusionEvent)] =
     ???
 
   def trueFusions(graph: Graph[ADAMRecord, ApproximateFusionEvent], exactFusions: RDD[(ApproximateFusionEvent, FusionEvent)]): RDD[FusionEvent] =
