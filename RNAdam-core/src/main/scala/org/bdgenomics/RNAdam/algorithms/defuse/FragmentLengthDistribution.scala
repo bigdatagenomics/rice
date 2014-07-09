@@ -17,11 +17,9 @@
  */
 package org.bdgenomics.RNAdam.algorithms.defuse
 
-import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-import org.bdgenomics.adam.rich.RichADAMRecord._
-import org.bdgenomics.formats.avro.ADAMRecord
 import org.bdgenomics.RNAdam.models.ReadPair
+import org.bdgenomics.adam.rich.RichADAMRecord._
 
 object FragmentLengthDistribution extends Serializable {
 
