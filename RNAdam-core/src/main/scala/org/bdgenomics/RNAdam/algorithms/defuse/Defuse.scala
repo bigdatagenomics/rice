@@ -35,6 +35,11 @@ object Defuse {
     trueFusions(graph, exactBoundary)
   }
 
+  /**
+   * Anita and Dennis are working on this...
+   * @param records
+   * @return
+   */
   def classify(records: RDD[ADAMRecord]): (RDD[ReadPair], RDD[ReadPair], RDD[ReadPair]) =
     ???
 
@@ -49,12 +54,33 @@ object Defuse {
   def findPercentiles(concordantRecords: RDD[ReadPair], alpha: Double): (Long, Long) =
     FragmentLengthDistribution.findPercentiles(concordantRecords, alpha)
 
+  /**
+   * Frank is working on this...
+   * @param spanningRecords
+   * @param lmax
+   * @return
+   */
   def buildGraph(spanningRecords: RDD[ReadPair], lmax: Long): Graph[ReadPair, ApproximateFusionEvent] =
     ???
 
+  /**
+   * Timothy is working on this...
+   *
+   * @param graph
+   * @return
+   */
   def bestFusions(graph: Graph[ReadPair, ApproximateFusionEvent]): RDD[ApproximateFusionEvent] =
     ???
 
+  /**
+   * Carl is working on this...
+   *
+   * @param fusions
+   * @param splitRecords
+   * @param lmin
+   * @param lmax
+   * @return
+   */
   def assignSplitsToFusions(fusions: RDD[ApproximateFusionEvent], splitRecords: RDD[ReadPair], lmin: Long, lmax: Long): RDD[(ApproximateFusionEvent, ReadPair)] =
     ???
 
