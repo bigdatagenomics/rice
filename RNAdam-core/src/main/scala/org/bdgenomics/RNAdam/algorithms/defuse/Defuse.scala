@@ -20,17 +20,22 @@ package org.bdgenomics.RNAdam.algorithms.defuse
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.bdgenomics.RNAdam.models.{ ApproximateFusionEvent, FusionEvent, ReadPair }
+import org.bdgenomics.adam.models.SequenceDictionary
 import org.bdgenomics.formats.avro.ADAMRecord
 
-class Defuse(coverAlgorithm: SetCover) {
+/**
+ *
+ * @param alpha The top/bottom % of reads to exclude.
+ */
+class Defuse(coverAlgorithm: SetCover, alpha: Double) {
 
   def run(records: RDD[ADAMRecord],
-    alpha: Double): RDD[FusionEvent] = {
+    seqDict: SequenceDictionary): RDD[FusionEvent] = {
     val (concordant, spanning, split) = classify(records)
-    val (lmin, lmax) = findPercentiles(concordant, alpha)
+    val (lmin, lmax) = findPercentiles(concordant)
     val graph = buildGraph(spanning, lmax)
     val fusions = bestFusions(graph)
-    val splitRecordToFusion = assignSplitsToFusions(fusions, split, lmin, lmax)
+    val splitRecordToFusion = assignSplitsToFusions(fusions, split, seqDict, lmin, lmax)
     val exactBoundary = findExactBoundaryForFusions(splitRecordToFusion)
     trueFusions(graph, exactBoundary)
   }
@@ -55,10 +60,9 @@ class Defuse(coverAlgorithm: SetCover) {
    * alpha parameter.
    *
    * @param concordantRecords An RDD of ADAM reads.
-   * @param alpha The top/bottom % of reads to exclude.
    * @return (l_{min}, l_{max}): Return the min and max length.
    */
-  def findPercentiles(concordantRecords: RDD[ReadPair], alpha: Double): (Long, Long) =
+  def findPercentiles(concordantRecords: RDD[ReadPair]): (Long, Long) =
     FragmentLengthDistribution.findPercentiles(concordantRecords, alpha)
 
   /**
@@ -102,8 +106,13 @@ class Defuse(coverAlgorithm: SetCover) {
    * @return
    * @author carlyeks
    */
-  def assignSplitsToFusions(fusions: RDD[ApproximateFusionEvent], splitRecords: RDD[ReadPair], lmin: Long, lmax: Long): RDD[(ApproximateFusionEvent, ReadPair)] =
-    ???
+  def assignSplitsToFusions(fusions: RDD[ApproximateFusionEvent],
+    splitRecords: RDD[ReadPair],
+    seqDict: SequenceDictionary,
+    lmin: Long,
+    lmax: Long): RDD[(ApproximateFusionEvent, ReadPair)] = {
+    SplitAssigner.assignSplitsToFusions(fusions, splitRecords, seqDict, lmin, lmax)
+  }
 
   def findExactBoundaryForFusions(splitRecordToFusions: RDD[(ApproximateFusionEvent, ReadPair)]): RDD[(ApproximateFusionEvent, FusionEvent)] =
     ???
