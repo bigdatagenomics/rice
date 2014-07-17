@@ -23,7 +23,7 @@ import org.bdgenomics.adam.rich.RichADAMRecord
 import org.bdgenomics.formats.avro.ADAMRecord
 
 case class ReadPair(first: ADAMRecord,
-    second: ADAMRecord) {
+                    second: ADAMRecord) {
 
   /**
    * Generates a hash on this read pair.

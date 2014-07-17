@@ -34,7 +34,7 @@ private[cliques] object CliqueMessage {
    * @return Returns a clique communication message.
    */
   def apply(vid: Long,
-    neighbors: Seq[Long]): CliqueMessage = {
+            neighbors: Seq[Long]): CliqueMessage = {
     new CliqueMessage(Seq(Clique((Seq(vid) ++ neighbors).toSet)))
   }
 

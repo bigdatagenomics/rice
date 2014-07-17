@@ -25,7 +25,7 @@ import org.bdgenomics.RNAdam.models.{ ApproximateFusionEvent, ReadPair }
 object BuildGraph extends Serializable {
 
   def apply(spanningRecords: RDD[ReadPair],
-    lMax: Long): RDD[(ApproximateFusionEvent, Seq[ReadPair])] = {
+            lMax: Long): RDD[(ApproximateFusionEvent, Seq[ReadPair])] = {
     val initGraph = buildGraph(spanningRecords, lMax)
     val trimmedGraph = trimGraph(initGraph)
     val cliques = FindCliques.findMaximalCliques(trimmedGraph)
@@ -57,7 +57,7 @@ object BuildGraph extends Serializable {
    * @return Returns an unpruned graph.
    */
   protected def buildGraph(spanningRecords: RDD[ReadPair],
-    lMax: Long): Graph[ReadPair, (ApproximateFusionEvent, ApproximateFusionEvent)] = {
+                           lMax: Long): Graph[ReadPair, (ApproximateFusionEvent, ApproximateFusionEvent)] = {
 
     // group records to split transcripts
     val groupedRecords = spanningRecords.groupBy(rp => {
