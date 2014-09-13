@@ -22,8 +22,8 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.{ SparkContext, Logging }
 import org.kohsuke.args4j.{ Option => option, Argument }
 import org.bdgenomics.formats.avro.{
-  ADAMRecord,
-  ADAMNucleotideContigFragment
+  AlignmentRecord,
+  NucleotideContigFragment
 }
 import org.bdgenomics.adam.cli.{
   ADAMSparkCommand,
@@ -71,6 +71,6 @@ class RNAdam(protected val args: RNAdamArgs) extends ADAMSparkCommand[RNAdamArgs
 
     log.info("Loading reads in from " + args.readInput)
     // load in reads from ADAM file
-    val reads: RDD[ADAMRecord] = sc.adamLoad(args.readInput)
+    val reads: RDD[AlignmentRecord] = sc.adamLoad(args.readInput)
   }
 }

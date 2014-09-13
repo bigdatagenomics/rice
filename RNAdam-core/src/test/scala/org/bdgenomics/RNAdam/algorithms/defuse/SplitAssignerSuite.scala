@@ -20,18 +20,19 @@ package org.bdgenomics.RNAdam.algorithms.defuse
 import org.bdgenomics.RNAdam.models.{ ReadPair, ApproximateFusionEvent }
 import org.bdgenomics.adam.models.{ SequenceRecord, SequenceDictionary, ReferenceRegion }
 import org.bdgenomics.adam.util.SparkFunSuite
-import org.bdgenomics.formats.avro.{ ADAMContig, ADAMRecord }
+import org.bdgenomics.formats.avro.{ Contig, AlignmentRecord }
 
 class SplitAssignerSuite extends SparkFunSuite {
   sparkTest("Split Assigner makes correct assignment given direct query") {
     val t1t2afe = ApproximateFusionEvent(ReferenceRegion("t1", 100, 115), ReferenceRegion("t2", 100, 115))
-    val t1Record = ADAMRecord.newBuilder()
-      .setContig(ADAMContig.newBuilder().setContigName("t1").build())
+    val t1Record = AlignmentRecord.newBuilder()
+      .setContig(Contig.newBuilder().setContigName("t1").build())
       .setStart(110)
+      .setEnd(115)
       .setCigar("5M")
       .setReadMapped(true)
       .build()
-    val unmappedRecord = ADAMRecord.newBuilder()
+    val unmappedRecord = AlignmentRecord.newBuilder()
       .setReadMapped(false)
       .build()
     val readPair = ReadPair(t1Record, unmappedRecord)
@@ -45,19 +46,21 @@ class SplitAssignerSuite extends SparkFunSuite {
 
   sparkTest("Split Assigner finds multiple split reads") {
     val t1t2afe = ApproximateFusionEvent(ReferenceRegion("t1", 100, 115), ReferenceRegion("t2", 100, 115))
-    val t1Record = ADAMRecord.newBuilder()
-      .setContig(ADAMContig.newBuilder().setContigName("t1").build())
+    val t1Record = AlignmentRecord.newBuilder()
+      .setContig(Contig.newBuilder().setContigName("t1").build())
       .setStart(110)
+      .setEnd(115)
       .setCigar("5M")
       .setReadMapped(true)
       .build()
-    val t2Record = ADAMRecord.newBuilder()
-      .setContig(ADAMContig.newBuilder().setContigName("t2").build())
+    val t2Record = AlignmentRecord.newBuilder()
+      .setContig(Contig.newBuilder().setContigName("t2").build())
       .setStart(105)
+      .setEnd(110)
       .setCigar("5M")
       .setReadMapped(true)
       .build()
-    val unmappedRecord = ADAMRecord.newBuilder()
+    val unmappedRecord = AlignmentRecord.newBuilder()
       .setReadMapped(false)
       .build()
     val readPairT1 = ReadPair(t1Record, unmappedRecord)

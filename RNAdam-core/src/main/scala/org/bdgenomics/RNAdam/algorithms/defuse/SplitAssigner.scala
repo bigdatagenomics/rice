@@ -21,8 +21,8 @@ import org.apache.spark.rdd.RDD
 import org.bdgenomics.RNAdam.models.{ ApproximateFusionEvent, ReadPair }
 import org.bdgenomics.adam.models.{ SequenceDictionary, ReferenceMapping, ReferenceRegion }
 import org.bdgenomics.adam.rdd.RegionJoin
-import org.bdgenomics.adam.rich.ReferenceMappingContext.ADAMRecordReferenceMapping
-import org.bdgenomics.formats.avro.ADAMRecord
+import org.bdgenomics.adam.rich.ReferenceMappingContext.AlignmentRecordReferenceMapping
+import org.bdgenomics.formats.avro.AlignmentRecord
 import scala.reflect._
 
 object SplitAssigner {
@@ -32,10 +32,10 @@ object SplitAssigner {
     override def getReferenceRegion(value: (ReferenceRegion, ApproximateFusionEvent)): ReferenceRegion = value._1
   }
 
-  case object ADAMRecordReadPairReferenceMapping extends ReferenceMapping[(ADAMRecord, ReadPair)] {
-    override def getReferenceName(value: (ADAMRecord, ReadPair)): String = ADAMRecordReferenceMapping.getReferenceName(value._1)
+  case object AlignmentRecordReadPairReferenceMapping extends ReferenceMapping[(AlignmentRecord, ReadPair)] {
+    override def getReferenceName(value: (AlignmentRecord, ReadPair)): String = AlignmentRecordReferenceMapping.getReferenceName(value._1)
 
-    override def getReferenceRegion(value: (ADAMRecord, ReadPair)): ReferenceRegion = ADAMRecordReferenceMapping.getReferenceRegion(value._1)
+    override def getReferenceRegion(value: (AlignmentRecord, ReadPair)): ReferenceRegion = AlignmentRecordReferenceMapping.getReferenceRegion(value._1)
   }
 
   private[this] def referenceRegionsForEvents(events: RDD[ApproximateFusionEvent], lmin: Long, lmax: Long): RDD[(ReferenceRegion, ApproximateFusionEvent)] = {
@@ -55,9 +55,9 @@ object SplitAssigner {
       .flatten)
     RegionJoin.partitionAndJoin(events.sparkContext, seqDict, referenceRegions, flattenedRecords)(
       ReferenceRegionApproximateFusionEventReferenceMapping,
-      ADAMRecordReadPairReferenceMapping,
+      AlignmentRecordReadPairReferenceMapping,
       classTag[(ReferenceRegion, ApproximateFusionEvent)],
-      classTag[(ADAMRecord, ReadPair)])
+      classTag[(AlignmentRecord, ReadPair)])
       .map {
         case ((_, afe), (_, rp)) => (afe, rp)
       }
