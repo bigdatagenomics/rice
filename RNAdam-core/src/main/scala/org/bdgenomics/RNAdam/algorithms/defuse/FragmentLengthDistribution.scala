@@ -19,7 +19,7 @@ package org.bdgenomics.RNAdam.algorithms.defuse
 
 import org.apache.spark.rdd.RDD
 import org.bdgenomics.RNAdam.models.ReadPair
-import org.bdgenomics.adam.rich.RichADAMRecord._
+import org.bdgenomics.adam.rich.RichAlignmentRecord._
 
 object FragmentLengthDistribution extends Serializable {
 
@@ -41,7 +41,7 @@ object FragmentLengthDistribution extends Serializable {
     // calculate the insert distribution
     val insertDistribution = sampledReads.map(pair => {
       // get end of first read and start of second read
-      val endFirst = pair.first.end
+      val endFirst = Option(pair.first.getEnd)
       val startSecond = Option(pair.second.getStart)
       assert(endFirst.isDefined && startSecond.isDefined,
         "Reads don't seem to be aligned...")

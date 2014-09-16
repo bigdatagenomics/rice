@@ -18,12 +18,12 @@
 package org.bdgenomics.RNAdam.models
 
 import org.bdgenomics.adam.models.ReferenceRegion
-import org.bdgenomics.adam.rich.RichADAMRecord._
-import org.bdgenomics.adam.rich.RichADAMRecord
-import org.bdgenomics.formats.avro.ADAMRecord
+import org.bdgenomics.adam.rich.RichAlignmentRecord._
+import org.bdgenomics.adam.rich.RichAlignmentRecord
+import org.bdgenomics.formats.avro.AlignmentRecord
 
-case class ReadPair(first: ADAMRecord,
-                    second: ADAMRecord) {
+case class ReadPair(first: AlignmentRecord,
+                    second: AlignmentRecord) {
 
   /**
    * Generates a hash on this read pair.
@@ -57,7 +57,7 @@ case class ReadPair(first: ADAMRecord,
    * is not aligned.
    */
   def generateEvent(l: Long): ApproximateFusionEvent = {
-    val firstEnd = first.end
+    val firstEnd = Option(first.getEnd)
     val secondStart = Option(second.getStart)
     assert(firstEnd.isDefined && secondStart.isDefined,
       "Both reads in pair must be aligned.")

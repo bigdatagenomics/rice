@@ -21,7 +21,7 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.bdgenomics.RNAdam.models.{ ApproximateFusionEvent, FusionEvent, ReadPair }
 import org.bdgenomics.adam.models.SequenceDictionary
-import org.bdgenomics.formats.avro.ADAMRecord
+import org.bdgenomics.formats.avro.AlignmentRecord
 
 /**
  *
@@ -29,7 +29,7 @@ import org.bdgenomics.formats.avro.ADAMRecord
  */
 class Defuse(coverAlgorithm: SetCover, alpha: Double) {
 
-  def run(records: RDD[ADAMRecord],
+  def run(records: RDD[AlignmentRecord],
           seqDict: SequenceDictionary): RDD[FusionEvent] = {
     val (concordant, spanning, split) = classify(records)
     val (lmin, lmax) = findPercentiles(concordant)
@@ -52,7 +52,7 @@ class Defuse(coverAlgorithm: SetCover, alpha: Double) {
    * @author anitacita99
    *         dcunningham
    */
-  def classify(records: RDD[ADAMRecord]): (RDD[ReadPair], RDD[ReadPair], RDD[ReadPair]) =
+  def classify(records: RDD[AlignmentRecord]): (RDD[ReadPair], RDD[ReadPair], RDD[ReadPair]) =
     ???
 
   /**
