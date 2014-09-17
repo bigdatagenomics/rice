@@ -15,12 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.bdgenomics.RNAdam.models
+package org.bdgenomics.RNAdam.plugins
 
-import org.bdgenomics.adam.models.ReferencePosition
+import org.apache.avro.Schema
+import org.apache.spark.rdd.RDD
+import org.apache.spark.SparkContext
+import org.bdgenomics.adam.plugins.ADAMPlugin
+import org.bdgenomics.formats.avro.AlignmentRecord
+import org.bdgenomics.RNAdam.algorithms.defuse.Defuse
+import org.bdgenomics.RNAdam.models.FusionEvent
 
-case class FusionEvent(start: ReferencePosition, end: ReferencePosition) {
+class DefusePlugin extends ADAMPlugin[AlignmentRecord, FusionEvent] {
 
-  override def toString(): String = "Fusion event at: " + start + ", " + end
+  // We don't use a projection nor a predicate
+  def projection: Option[Schema] = None
+  def predicate: Option[AlignmentRecord => Boolean] = None
 
+  def run(sc: SparkContext, recs: RDD[AlignmentRecord], args: String): RDD[FusionEvent] = {
+    val alpha = args.toDouble
+    // run defuse
+    Defuse(recs, alpha)
+  }
 }

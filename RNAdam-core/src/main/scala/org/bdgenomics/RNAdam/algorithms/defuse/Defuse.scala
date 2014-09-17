@@ -21,7 +21,19 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.bdgenomics.RNAdam.models.{ ApproximateFusionEvent, FusionEvent, ReadPair }
 import org.bdgenomics.adam.models.SequenceDictionary
+import org.bdgenomics.adam.rdd.ADAMContext._
+import org.bdgenomics.adam.rdd.read.ADAMAlignmentRecordContext._
 import org.bdgenomics.formats.avro.AlignmentRecord
+
+object Defuse {
+
+  def apply(records: RDD[AlignmentRecord], alpha: Double): RDD[FusionEvent] = {
+    val d = new Defuse(new GreedyVertexCover, alpha)
+
+    // run
+    d.run(records, records.adamGetSequenceDictionary())
+  }
+}
 
 /**
  *

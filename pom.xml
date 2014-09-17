@@ -29,7 +29,6 @@
 
   <modules>
     <module>RNAdam-core</module>
-    <module>RNAdam-cli</module>
   </modules>
 
   <licenses>
