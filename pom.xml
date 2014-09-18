@@ -17,7 +17,7 @@
   <name>RNAdam: an ADAM-based RNA-seq quantification pipeline</name>
 
   <properties>
-    <adam.version>0.13.1-SNAPSHOT</adam.version>
+    <adam.version>0.14.1-SNAPSHOT</adam.version>
     <avro.version>1.7.4</avro.version>
     <java.version>1.7</java.version>
     <scala.version>2.10.3</scala.version>
