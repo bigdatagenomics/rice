@@ -24,6 +24,11 @@ import org.bdgenomics.adam.util.SparkFunSuite
 
 class FindCliquesSuite extends SparkFunSuite {
 
+  override val properties = Map(("spark.serializer", "org.apache.spark.serializer.KryoSerializer"),
+    ("spark.kryo.registrator", "org.bdgenomics.adam.serialization.ADAMKryoRegistrator"),
+    ("spark.kryoserializer.buffer.mb", "128"),
+    ("spark.kryo.referenceTracking", "true"))
+
   sparkTest("disconnected nodes are their own clique") {
     val graph = Graph(sc.parallelize(Seq((0L, 0),
       (1L, 1),

@@ -23,6 +23,12 @@ import org.bdgenomics.adam.util.SparkFunSuite
 import org.bdgenomics.formats.avro.{ Contig, AlignmentRecord }
 
 class SplitAssignerSuite extends SparkFunSuite {
+
+  override val properties = Map(("spark.serializer", "org.apache.spark.serializer.KryoSerializer"),
+    ("spark.kryo.registrator", "org.bdgenomics.adam.serialization.ADAMKryoRegistrator"),
+    ("spark.kryoserializer.buffer.mb", "128"),
+    ("spark.kryo.referenceTracking", "true"))
+
   sparkTest("Split Assigner makes correct assignment given direct query") {
     val t1t2afe = ApproximateFusionEvent(ReferenceRegion("t1", 100, 115), ReferenceRegion("t2", 100, 115))
     val t1Record = AlignmentRecord.newBuilder()
