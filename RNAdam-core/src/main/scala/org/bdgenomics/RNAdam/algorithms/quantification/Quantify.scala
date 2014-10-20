@@ -19,6 +19,7 @@ package org.bdgenomics.RNAdam.algorithms.quantification
 
 import org.apache.spark.Logging
 import org.apache.spark.rdd.RDD
+import org.apache.spark.SparkContext._
 import org.bdgenomics.adam.rdd.ADAMContext._
 import org.bdgenomics.adam.rdd.read.AlignmentRecordContext._
 import org.bdgenomics.formats.avro.AlignmentRecord
@@ -82,7 +83,9 @@ object Quantify extends Serializable with Logging {
    */
   private[quantification] def mapKmersToClasses(kmerCounts: RDD[(String, Long)],
                                                 kmerToEquivalenceClass: RDD[(String, Long)]): RDD[(Long, Long)] = {
-    ???
+    kmerToEquivalenceClass.join(kmerCounts)
+      .map((x: (String, (Long, Long))) => x._2)
+      .reduceByKey((c0: Long, c1: Long) => c0 + c1)
   }
 
   /**
