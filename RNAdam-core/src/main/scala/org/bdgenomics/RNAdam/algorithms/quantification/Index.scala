@@ -21,7 +21,7 @@ import org.apache.spark.Logging
 import org.apache.spark.rdd.RDD
 import org.bdgenomics.adam.rdd.ADAMContext._
 import org.bdgenomics.formats.avro.NucleotideContigFragment
-import org.bdgenomics.RNAdam.models.{ Exon, Transcript }
+import org.bdgenomics.adam.models.{ Exon, Transcript }
 
 object Index extends Serializable with Logging {
 

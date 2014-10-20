@@ -21,6 +21,11 @@ import org.bdgenomics.adam.util.SparkFunSuite
 
 class ClassifyTestSuite extends SparkFunSuite {
 
+  override val properties = Map(("spark.serializer", "org.apache.spark.serializer.KryoSerializer"),
+    ("spark.kryo.registrator", "org.bdgenomics.adam.serialization.ADAMKryoRegistrator"),
+    ("spark.kryoserializer.buffer.mb", "128"),
+    ("spark.kryo.referenceTracking", "true"))
+
   sparkTest("put your test here") {
     val mySc = sc // this is your SparkContext
   }

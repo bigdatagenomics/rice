@@ -20,9 +20,9 @@ package org.bdgenomics.RNAdam.algorithms.quantification
 import org.apache.spark.Logging
 import org.apache.spark.rdd.RDD
 import org.bdgenomics.adam.rdd.ADAMContext._
-import org.bdgenomics.adam.rdd.read.ADAMAlignmentRecordContext._
+import org.bdgenomics.adam.rdd.read.AlignmentRecordContext._
 import org.bdgenomics.formats.avro.AlignmentRecord
-import org.bdgenomics.RNAdam.models.Transcript
+import org.bdgenomics.adam.models.Transcript
 
 object Quantify extends Serializable with Logging {
 
