@@ -45,7 +45,6 @@ object SplitAssigner {
 
   def assignSplitsToFusions(events: RDD[ApproximateFusionEvent],
                             records: RDD[ReadPair],
-                            seqDict: SequenceDictionary,
                             lmin: Long,
                             lmax: Long): RDD[(ApproximateFusionEvent, ReadPair)] = {
     val referenceRegions = referenceRegionsForEvents(events, lmin, lmax)
@@ -53,7 +52,7 @@ object SplitAssigner {
       if (rp.first.getReadMapped) Some((rp.first, rp)) else None,
       if (rp.second.getReadMapped) Some((rp.second, rp)) else None)
       .flatten)
-    RegionJoin.partitionAndJoin(events.sparkContext, seqDict, referenceRegions, flattenedRecords)(
+    RegionJoin.partitionAndJoin(events.sparkContext, referenceRegions, flattenedRecords)(
       ReferenceRegionApproximateFusionEventReferenceMapping,
       AlignmentRecordReadPairReferenceMapping,
       classTag[(ReferenceRegion, ApproximateFusionEvent)],

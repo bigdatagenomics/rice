@@ -18,7 +18,7 @@
 package org.bdgenomics.RNAdam.algorithms.defuse
 
 import org.bdgenomics.RNAdam.models.{ ReadPair, ApproximateFusionEvent }
-import org.bdgenomics.adam.models.{ SequenceRecord, SequenceDictionary, ReferenceRegion }
+import org.bdgenomics.adam.models.ReferenceRegion
 import org.bdgenomics.adam.util.SparkFunSuite
 import org.bdgenomics.formats.avro.{ Contig, AlignmentRecord }
 
@@ -44,8 +44,7 @@ class SplitAssignerSuite extends SparkFunSuite {
     val readPair = ReadPair(t1Record, unmappedRecord)
     val fusions = sc.parallelize(Seq(t1t2afe))
     val records = sc.parallelize(Seq(readPair))
-    val seqDict = SequenceDictionary(SequenceRecord("t1", 200), SequenceRecord("t2", 200))
-    val assignments = SplitAssigner.assignSplitsToFusions(fusions, records, seqDict, 1, 5)
+    val assignments = SplitAssigner.assignSplitsToFusions(fusions, records, 1, 5)
     assert(assignments.count() === 1)
     assert(assignments.first() === (t1t2afe, readPair))
   }
@@ -73,8 +72,7 @@ class SplitAssignerSuite extends SparkFunSuite {
     val readPairT2 = ReadPair(t2Record, unmappedRecord)
     val fusions = sc.parallelize(Seq(t1t2afe))
     val records = sc.parallelize(Seq(readPairT1, readPairT2))
-    val seqDict = SequenceDictionary(SequenceRecord("t1", 200), SequenceRecord("t2", 200))
-    val assignments = SplitAssigner.assignSplitsToFusions(fusions, records, seqDict, 1, 5)
+    val assignments = SplitAssigner.assignSplitsToFusions(fusions, records, 1, 5)
     assert(assignments.count() === 2)
     assert(assignments.collect().toSet === Set((t1t2afe, readPairT1), (t1t2afe, readPairT2)))
   }
