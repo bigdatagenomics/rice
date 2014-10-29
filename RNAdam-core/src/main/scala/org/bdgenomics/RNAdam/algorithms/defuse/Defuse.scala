@@ -31,7 +31,7 @@ object Defuse {
     val d = new Defuse(new GreedyVertexCover, alpha)
 
     // run
-    d.run(records, records.adamGetSequenceDictionary())
+    d.run(records)
   }
 }
 
@@ -41,13 +41,12 @@ object Defuse {
  */
 class Defuse(coverAlgorithm: SetCover, alpha: Double) {
 
-  def run(records: RDD[AlignmentRecord],
-          seqDict: SequenceDictionary): RDD[FusionEvent] = {
+  def run(records: RDD[AlignmentRecord]): RDD[FusionEvent] = {
     val (concordant, spanning, split) = classify(records)
     val (lmin, lmax) = findPercentiles(concordant)
     val graph = buildGraph(spanning, lmax)
     val fusions = bestFusions(graph)
-    val splitRecordToFusion = assignSplitsToFusions(fusions, split, seqDict, lmin, lmax)
+    val splitRecordToFusion = assignSplitsToFusions(fusions, split, lmin, lmax)
     val exactBoundary = findExactBoundaryForFusions(splitRecordToFusion)
     trueFusions(graph, exactBoundary)
   }
@@ -120,10 +119,9 @@ class Defuse(coverAlgorithm: SetCover, alpha: Double) {
    */
   def assignSplitsToFusions(fusions: RDD[ApproximateFusionEvent],
                             splitRecords: RDD[ReadPair],
-                            seqDict: SequenceDictionary,
                             lmin: Long,
                             lmax: Long): RDD[(ApproximateFusionEvent, ReadPair)] = {
-    SplitAssigner.assignSplitsToFusions(fusions, splitRecords, seqDict, lmin, lmax)
+    SplitAssigner.assignSplitsToFusions(fusions, splitRecords, lmin, lmax)
   }
 
   def findExactBoundaryForFusions(splitRecordToFusions: RDD[(ApproximateFusionEvent, ReadPair)]): RDD[(ApproximateFusionEvent, FusionEvent)] =
