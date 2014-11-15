@@ -85,7 +85,7 @@ object Quantify extends Serializable with Logging {
    */
   private[quantification] def extractTranscriptLengths(rdd: RDD[Transcript]): scala.collection.Map[String, Long] = {
     rdd.map(t => {
-      (t.id, t.exons.map(_.region.width).reduce(_ + _))
+      (t.id, t.exons.map(_.region.width - 1).reduce(_ + _))
     }).collectAsMap
   }
 

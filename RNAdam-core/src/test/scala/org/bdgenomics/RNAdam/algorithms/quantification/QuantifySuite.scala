@@ -22,7 +22,7 @@ import org.apache.spark.rdd.RDD
 import org.bdgenomics.adam.models.{ Exon, ReferenceRegion, Transcript }
 import org.bdgenomics.adam.util.SparkFunSuite
 
-class QuantifyTestSuite extends SparkFunSuite {
+class QuantifySuite extends SparkFunSuite {
 
   sparkTest("test of mapKmersToClasses") {
     val kmerToEquivalenceClass: RDD[(String, Long)] = sc.parallelize(Seq(("a", 2),

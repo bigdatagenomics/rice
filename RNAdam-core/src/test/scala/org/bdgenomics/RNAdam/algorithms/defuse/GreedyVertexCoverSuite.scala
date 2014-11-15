@@ -19,7 +19,7 @@ package org.bdgenomics.RNAdam.algorithms.defuse
 
 import org.bdgenomics.adam.util.SparkFunSuite
 
-class GreedyVertexCoverTestSuite extends SparkFunSuite {
+class GreedyVertexCoverSuite extends SparkFunSuite {
 
   override val properties = Map(("spark.serializer", "org.apache.spark.serializer.KryoSerializer"),
     ("spark.kryo.registrator", "org.bdgenomics.adam.serialization.ADAMKryoRegistrator"),
