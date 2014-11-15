@@ -19,6 +19,7 @@ package org.bdgenomics.RNAdam.algorithms.quantification
 
 import scala.math
 import org.apache.spark.rdd.RDD
+import org.bdgenomics.adam.models.{ Exon, ReferenceRegion, Transcript }
 import org.bdgenomics.adam.util.SparkFunSuite
 
 class QuantifyTestSuite extends SparkFunSuite {
@@ -74,4 +75,23 @@ class QuantifyTestSuite extends SparkFunSuite {
     }))
   }
 
+  sparkTest("extract lengths from transcripts") {
+    val exons1 = Iterable(Exon("e1", "t1", true, ReferenceRegion("1", 0L, 101L)),
+      Exon("e2", "t1", true, ReferenceRegion("1", 200L, 401L)),
+      Exon("e3", "t1", true, ReferenceRegion("1", 500L, 576L)))
+    val exons2 = Iterable(Exon("e1", "t2", false, ReferenceRegion("1", 600L, 651L)),
+      Exon("e2", "t2", false, ReferenceRegion("1", 200L, 401L)),
+      Exon("e3", "t2", false, ReferenceRegion("1", 125L, 176L)),
+      Exon("e4", "t2", false, ReferenceRegion("1", 25L, 76L)))
+
+    val transcripts = Seq(Transcript("t1", Seq("t1"), "g1", true, exons1, Iterable(), Iterable()),
+      Transcript("t2", Seq("t2"), "g1", false, exons2, Iterable(), Iterable()))
+    val rdd = sc.parallelize(transcripts)
+
+    val lengths = Quantify.extractTranscriptLengths(rdd)
+
+    assert(lengths.size === 2)
+    assert(lengths("t1") === 375L)
+    assert(lengths("t2") === 350L)
+  }
 }
