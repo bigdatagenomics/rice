@@ -94,4 +94,45 @@ class QuantifyTestSuite extends SparkFunSuite {
     assert(lengths("t1") === 375L)
     assert(lengths("t2") === 350L)
   }
+
+  def dummyTranscript(id: String): Transcript = {
+    return new Transcript(id,
+      Seq("test"),
+      "Gene1",
+      true,
+      Iterable(),
+      Iterable(),
+      Iterable())
+  }
+
+  test("Dummy Transcript correctly initialized:") {
+    var t = dummyTranscript("t1")
+    assert(t.id == "t1")
+    assert(t.strand == true)
+  }
+
+  sparkTest("transcripts correctly matched with coverage") {
+    var s1: Double = 1
+    var s2: Double = 2
+    var s3: Double = 3
+    val rdd1 = sc.parallelize(Array(dummyTranscript("t1"),
+      dummyTranscript("t2"),
+      dummyTranscript("t3")))
+    val rdd2 = sc.parallelize(Array(("t1", s1, Iterable[Long]()),
+      ("t2", s2, Iterable[Long]()),
+      ("t3", s3, Iterable[Long]())))
+    val rdd3 = Quantify.joinTranscripts(rdd1, rdd2)
+    val compare = rdd3.collect()
+    for (x <- compare) {
+      if (x._1.id == "t1") {
+        assert(x._2 == s1)
+      }
+      if (x._1.id == "t2") {
+        assert(x._2 == s2)
+      }
+      if (x._1.id == "t3") {
+        assert(x._2 == s3)
+      }
+    }
+  }
 }
