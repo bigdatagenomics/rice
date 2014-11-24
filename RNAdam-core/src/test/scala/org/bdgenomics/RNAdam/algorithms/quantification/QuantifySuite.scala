@@ -17,14 +17,19 @@
  */
 package org.bdgenomics.RNAdam.algorithms.quantification
 
-import scala.math
-import scala.collection.Map
-import scala.collection.immutable.HashMap
 import org.apache.spark.rdd.RDD
 import org.bdgenomics.adam.models.{ Exon, ReferenceRegion, Transcript }
 import org.bdgenomics.adam.util.SparkFunSuite
+import org.bdgenomics.RNAdam.utils.{ ReadGenerator, TranscriptGenerator }
+import scala.collection.Map
+import scala.collection.immutable.HashMap
+import scala.math.abs
 
 class QuantifySuite extends SparkFunSuite {
+
+  def fpEquals(a: Double, b: Double, tol: Double = 1e-3): Boolean = {
+    abs(a - b) < tol
+  }
 
   sparkTest("test of mapKmersToClasses") {
     val kmerToEquivalenceClass: RDD[(String, Long)] = sc.parallelize(Seq(("a", 2),
@@ -57,7 +62,7 @@ class QuantifySuite extends SparkFunSuite {
     assert(ec1._1 === 1)
     assert(ec1._2.size === 5)
     assert(ec1._2.forall((x: (String, Double)) => {
-      math.abs(x._2 - 9.0) < 1e-3
+      fpEquals(x._2, 9.0)
     }))
     val ec2p: RDD[(Long, Iterable[(String, Double)])] = result.filter((x: (Long, Iterable[(String, Double)])) => x._1 == 2)
     assert(ec2p.count() === 1)
@@ -65,7 +70,7 @@ class QuantifySuite extends SparkFunSuite {
     assert(ec2._1 === 2)
     assert(ec2._2.size === 13)
     assert(ec2._2.forall((x: (String, Double)) => {
-      math.abs(x._2 - 4.0) < 1e-3
+      fpEquals(x._2, 4.0)
     }))
     val ec3p: RDD[(Long, Iterable[(String, Double)])] = result.filter((x: (Long, Iterable[(String, Double)])) => x._1 == 3)
     assert(ec3p.count() === 1)
@@ -73,7 +78,7 @@ class QuantifySuite extends SparkFunSuite {
     assert(ec3._1 === 3)
     assert(ec3._2.size === 7)
     assert(ec3._2.forall((x: (String, Double)) => {
-      equalDouble(x._2, 7.0)
+      fpEquals(x._2, 7.0)
     }))
   }
 
@@ -324,7 +329,7 @@ class QuantifySuite extends SparkFunSuite {
       Iterable())
   }
 
-  test("Dummy Transcript correctly initialized:") {
+  test("dummy transcript correctly initialized") {
     var t = dummyTranscript("t1")
     assert(t.id == "t1")
     assert(t.strand == true)
@@ -353,5 +358,46 @@ class QuantifySuite extends SparkFunSuite {
         assert(x._2 == s3)
       }
     }
+  }
+
+  ignore("quantify unique transcripts") {
+    // generate transcripts
+    val tLen = Seq(1000, 600, 400, 550, 1275, 1400)
+    val (transcripts,
+      names,
+      kmerMap,
+      classMap) = TranscriptGenerator.generateIndependentTranscripts(20,
+      tLen,
+      Some(1234L))
+
+    // generate reads
+    val reads = ReadGenerator(transcripts, Seq(0.2, 0.1, 0.3, 0.2, 0.1, 0.1), 10000, 75, Some(4321L))
+
+    // run quantification
+    val relativeAbundances = Quantify(sc.parallelize(reads),
+      sc.parallelize(kmerMap.toSeq),
+      sc.parallelize(classMap.toSeq),
+      sc.parallelize(names.zip(tLen).map(p => Transcript(p._1,
+        Seq(p._1),
+        p._1,
+        true,
+        Iterable(Exon(p._1 + "exon",
+          p._1,
+          true,
+          ReferenceRegion(p._1, 0, p._2.toLong))),
+        Iterable(),
+        Iterable()))),
+      20,
+      20).collect
+      .map(kv => (kv._1.id, kv._2))
+      .toMap
+
+    assert(relativeAbundances.size === 6)
+    assert(fpEquals(relativeAbundances("0"), 0.2, 0.05))
+    assert(fpEquals(relativeAbundances("1"), 0.1, 0.05))
+    assert(fpEquals(relativeAbundances("2"), 0.3, 0.05))
+    assert(fpEquals(relativeAbundances("3"), 0.2, 0.05))
+    assert(fpEquals(relativeAbundances("4"), 0.1, 0.05))
+    assert(fpEquals(relativeAbundances("5"), 0.1, 0.05))
   }
 }
