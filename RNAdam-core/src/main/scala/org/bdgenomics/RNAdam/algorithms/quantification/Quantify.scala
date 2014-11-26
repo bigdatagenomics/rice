@@ -147,7 +147,15 @@ object Quantify extends Serializable with Logging {
    *         map transcript IDs to alpha assignments.
    */
   private[quantification] def e(transcriptWeights: RDD[(String, Double, Iterable[Long])]): RDD[(Long, Iterable[(String, Double)])] = {
-    ???
+    transcriptWeights.flatMap((x: (String, Double, Iterable[Long])) => {
+      x._3.map((y: Long) => (y, (x._1, x._2)))
+    }).groupByKey()
+      .map((c: (Long, Iterable[(String, Double)])) => {
+        val tot: Double = c._2.reduce((m1: (String, Double), m2: (String, Double)) => {
+          (null, m1._2 + m2._2)
+        })._2
+        (c._1, c._2.map((p: (String, Double)) => (p._1, p._2 / tot)))
+      })
   }
 
   /**
@@ -179,7 +187,33 @@ object Quantify extends Serializable with Logging {
     // broadcast the transcript length map
     val tLenBcast = equivalenceClassAssignments.context.broadcast(tLen)
 
-    ???
+    val mus: RDD[(String, Double, Iterable[Long])] = equivalenceClassAssignments.flatMap((eca: (Long, Iterable[(String, Double)])) => {
+      eca._2.map((ta: (String, Double)) => {
+        (ta._1, (ta._2, eca._1))
+      })
+    }).groupByKey()
+      .map((raw: (String, Iterable[(Double, Long)])) => {
+        val sum_alpha: Double = raw._2.reduce((ae0: (Double, Long), ae1: (Double, Long)) => {
+          (ae0._1 + ae1._1, ae0._2)
+        })._1
+        val adj_len: Long = (tLen(raw._1) - kmerLength) + 1
+        val mu: Double = sum_alpha / adj_len
+        (raw._1, mu, raw._2.map((ae: (Double, Long)) => ae._2))
+      })
+
+    // Cache the mus RDD so that it is not computed twice.
+    mus.cache()
+
+    // This normalizes all the µ_i
+    // µhat_i = \frac{µ_i}{\sum_{t_j \in T} µ_j}
+    val total_mu: Double = mus.reduce((tme0: (String, Double, Iterable[Long]), tme1: (String, Double, Iterable[Long])) => {
+      (null, tme0._2 + tme1._2, null)
+    })._2
+
+    // Returns the normalized result.
+    mus.map((tme: (String, Double, Iterable[Long])) => {
+      (tme._1, tme._2 / total_mu, tme._3)
+    })
   }
 
   /**

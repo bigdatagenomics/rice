@@ -18,6 +18,8 @@
 package org.bdgenomics.RNAdam.algorithms.quantification
 
 import scala.math
+import scala.collection.Map
+import scala.collection.immutable.HashMap
 import org.apache.spark.rdd.RDD
 import org.bdgenomics.adam.models.{ Exon, ReferenceRegion, Transcript }
 import org.bdgenomics.adam.util.SparkFunSuite
@@ -71,8 +73,225 @@ class QuantifySuite extends SparkFunSuite {
     assert(ec3._1 === 3)
     assert(ec3._2.size === 7)
     assert(ec3._2.forall((x: (String, Double)) => {
-      math.abs(x._2 - 7.0) < 1e-3
+      equalDouble(x._2, 7.0)
     }))
+  }
+
+  sparkTest("test of e") {
+    // a, b, c, d are transcript names
+    // 1, 2, 3, 4, 5, 6, 7 are equivalence class IDs
+    val transcriptWeights: RDD[(String, Double, Iterable[Long])] = sc.parallelize(Seq(
+      ("a", 2.0, Seq(1, 3, 5, 6)),
+      ("b", 3.0, Seq(2, 4, 5)),
+      ("c", 4.0, Seq(1, 2, 5, 6, 7)),
+      ("d", 5.0, Seq(1, 2, 3))))
+    val equivalenceClassAssignments: RDD[(Long, Iterable[(String, Double)])] = Quantify.e(transcriptWeights)
+    assert(equivalenceClassAssignments.count() === 7)
+
+    // variables to keep track of whether each transcript name appears exactly once, if it should appear at all
+    var seen_a: Boolean = true
+    var seen_b: Boolean = true
+    var seen_c: Boolean = true
+    var seen_d: Boolean = true
+
+    // tests each record of the equivalenceClassAssignments RDD for correctness
+    val record1RDD: RDD[(Long, Iterable[(String, Double)])] = equivalenceClassAssignments.filter((x: (Long, Iterable[(String, Double)])) => x._1 == 1)
+    assert(record1RDD.count() === 1)
+    val record1: (Long, Iterable[(String, Double)]) = record1RDD.first()
+    assert(record1._1 === 1)
+    assert(record1._2.toSeq.length === 3)
+    seen_a = false
+    seen_c = false
+    seen_d = false
+    record1._2.foreach((x: (String, Double)) => {
+      if (x._1 == "a") {
+        assert((!seen_a) && equalDouble(x._2, 2.0 / 11))
+        seen_a = true
+      } else if (x._1 == "c") {
+        assert((!seen_c) && equalDouble(x._2, 4.0 / 11))
+        seen_c = true
+      } else if (x._1 == "d") {
+        assert((!seen_d) && equalDouble(x._2, 5.0 / 11))
+        seen_d = true
+      } else {
+        assert(false)
+      }
+    })
+
+    val record2RDD: RDD[(Long, Iterable[(String, Double)])] = equivalenceClassAssignments.filter((x: (Long, Iterable[(String, Double)])) => x._1 == 2)
+    assert(record2RDD.count() === 1)
+    val record2: (Long, Iterable[(String, Double)]) = record2RDD.first()
+    assert(record2._1 === 2)
+    assert(record2._2.toSeq.length === 3)
+    seen_b = false
+    seen_c = false
+    seen_d = false
+    record2._2.foreach((x: (String, Double)) => {
+      if (x._1 == "b") {
+        assert((!seen_b) && equalDouble(x._2, 0.25))
+        seen_b = true
+      } else if (x._1 == "c") {
+        assert((!seen_c) && equalDouble(x._2, 1.0 / 3))
+        seen_c = true
+      } else if (x._1 == "d") {
+        assert((!seen_d) && equalDouble(x._2, 5.0 / 12))
+        seen_d = true
+      } else {
+        assert(false)
+      }
+    })
+
+    val record3RDD: RDD[(Long, Iterable[(String, Double)])] = equivalenceClassAssignments.filter((x: (Long, Iterable[(String, Double)])) => x._1 == 3)
+    assert(record3RDD.count() === 1)
+    val record3: (Long, Iterable[(String, Double)]) = record3RDD.first()
+    assert(record3._1 === 3)
+    assert(record3._2.toSeq.length === 2)
+    seen_a = false
+    seen_d = false
+    record3._2.foreach((x: (String, Double)) => {
+      if (x._1 == "a") {
+        assert((!seen_a) && equalDouble(x._2, 2.0 / 7))
+        seen_a = true
+      } else if (x._1 == "d") {
+        assert((!seen_d) && equalDouble(x._2, 5.0 / 7))
+        seen_d = true
+      } else {
+        assert(false)
+      }
+    })
+
+    val record4RDD: RDD[(Long, Iterable[(String, Double)])] = equivalenceClassAssignments.filter((x: (Long, Iterable[(String, Double)])) => x._1 == 4)
+    assert(record4RDD.count() === 1)
+    val record4: (Long, Iterable[(String, Double)]) = record4RDD.first()
+    assert(record4._1 === 4)
+    assert(record4._2.toSeq.length === 1)
+    assert(record4._2.head._1 === "b")
+    assert(equalDouble(record4._2.head._2, 1.0))
+
+    val record5RDD: RDD[(Long, Iterable[(String, Double)])] = equivalenceClassAssignments.filter((x: (Long, Iterable[(String, Double)])) => x._1 == 5)
+    assert(record5RDD.count() === 1)
+    val record5: (Long, Iterable[(String, Double)]) = record5RDD.first()
+    assert(record5._1 === 5)
+    assert(record5._2.toSeq.length === 3)
+    seen_a = false
+    seen_b = false
+    seen_c = false
+    record5._2.foreach((x: (String, Double)) => {
+      if (x._1 == "a") {
+        assert((!seen_a) && equalDouble(x._2, 2.0 / 9))
+        seen_a = true
+      } else if (x._1 == "b") {
+        assert((!seen_b) && equalDouble(x._2, 1.0 / 3))
+        seen_b = true
+      } else if (x._1 == "c") {
+        assert((!seen_c) && equalDouble(x._2, 4.0 / 9))
+        seen_c = true
+      } else {
+        assert(false)
+      }
+    })
+
+    val record6RDD: RDD[(Long, Iterable[(String, Double)])] = equivalenceClassAssignments.filter((x: (Long, Iterable[(String, Double)])) => x._1 == 6)
+    assert(record6RDD.count() === 1)
+    val record6: (Long, Iterable[(String, Double)]) = record6RDD.first()
+    assert(record6._1 === 6)
+    assert(record6._2.toSeq.length === 2)
+    seen_a = false
+    seen_c = false
+    record6._2.foreach((x: (String, Double)) => {
+      if (x._1 == "a") {
+        assert((!seen_a) && equalDouble(x._2, 1.0 / 3))
+        seen_a = true
+      } else if (x._1 == "c") {
+        assert((!seen_c) && equalDouble(x._2, 2.0 / 3))
+        seen_c = true
+      } else {
+        assert(false)
+      }
+    })
+
+    val record7RDD: RDD[(Long, Iterable[(String, Double)])] = equivalenceClassAssignments.filter((x: (Long, Iterable[(String, Double)])) => x._1 == 7)
+    assert(record7RDD.count() === 1)
+    val record7: (Long, Iterable[(String, Double)]) = record7RDD.first()
+    assert(record7._1 === 7)
+    assert(record7._2.toSeq.length === 1)
+    assert(record7._2.head._1 === "c")
+    assert(equalDouble(record7._2.head._2, 1.0))
+
+  }
+
+  sparkTest("test of m") {
+    val equivalenceClassAssignments: RDD[(Long, Iterable[(String, Double)])] = sc.parallelize(Seq(
+      (1, Seq(("a", 0.6), ("c", 0.4))),
+      (2, Seq(("b", 0.1), ("d", 0.5), ("a", 0.4))),
+      (3, Seq(("a", 1.0))),
+      (4, Seq(("c", 0.7), ("a", 0.3)))))
+    val tLen: Map[String, Long] = (new HashMap()).+(
+      ("a", 5),
+      ("b", 6),
+      ("c", 7),
+      ("d", 3))
+    val transcriptWeights: RDD[(String, Double, Iterable[Long])] = Quantify.m(equivalenceClassAssignments, tLen, 3)
+    assert(transcriptWeights.count() === 4)
+    val a_record_RDD: RDD[(String, Double, Iterable[Long])] = transcriptWeights.filter((x: (String, Double, Iterable[Long])) => {
+      x._1 == "a"
+    })
+    assert(a_record_RDD.count() === 1)
+    val a_record: (String, Double, Iterable[Long]) = a_record_RDD.first()
+    assert(a_record._1 === "a")
+    assert(equalDouble(a_record._2, 460.0 / 907))
+    val a_record_eq_cls: Seq[Long] = a_record._3.toSeq
+    assert(a_record_eq_cls.length === 4)
+    assert(a_record_eq_cls.filter((x: Long) => x == 1).length === 1)
+    assert(a_record_eq_cls.filter((x: Long) => x == 2).length === 1)
+    assert(a_record_eq_cls.filter((x: Long) => x == 3).length === 1)
+    assert(a_record_eq_cls.filter((x: Long) => x == 4).length === 1)
+
+    val b_record_RDD: RDD[(String, Double, Iterable[Long])] = transcriptWeights.filter((x: (String, Double, Iterable[Long])) => {
+      x._1 == "b"
+    })
+    assert(b_record_RDD.count() === 1)
+    val b_record: (String, Double, Iterable[Long]) = b_record_RDD.first()
+    assert(b_record._1 === "b")
+    assert(equalDouble(b_record._2, 15.0 / 907))
+    val b_record_eq_cls: Seq[Long] = b_record._3.toSeq
+    assert(b_record_eq_cls.length === 1)
+    assert(b_record_eq_cls.filter((x: Long) => x == 1).length === 0)
+    assert(b_record_eq_cls.filter((x: Long) => x == 2).length === 1)
+    assert(b_record_eq_cls.filter((x: Long) => x == 3).length === 0)
+    assert(b_record_eq_cls.filter((x: Long) => x == 4).length === 0)
+
+    val c_record_RDD: RDD[(String, Double, Iterable[Long])] = transcriptWeights.filter((x: (String, Double, Iterable[Long])) => {
+      x._1 == "c"
+    })
+    assert(c_record_RDD.count() === 1)
+    val c_record: (String, Double, Iterable[Long]) = c_record_RDD.first()
+    assert(c_record._1 === "c")
+    assert(equalDouble(c_record._2, 132.0 / 907))
+    val c_record_eq_cls: Seq[Long] = c_record._3.toSeq
+    assert(c_record_eq_cls.length === 2)
+    assert(c_record_eq_cls.filter((x: Long) => x == 1).length === 1)
+    assert(c_record_eq_cls.filter((x: Long) => x == 2).length === 0)
+    assert(c_record_eq_cls.filter((x: Long) => x == 3).length === 0)
+    assert(c_record_eq_cls.filter((x: Long) => x == 4).length === 1)
+
+    val d_record_RDD: RDD[(String, Double, Iterable[Long])] = transcriptWeights.filter((x: (String, Double, Iterable[Long])) => {
+      x._1 == "d"
+    })
+    assert(d_record_RDD.count() === 1)
+    val d_record: (String, Double, Iterable[Long]) = d_record_RDD.first()
+    assert(d_record._1 === "d")
+    assert(equalDouble(d_record._2, 300.0 / 907))
+    val d_record_eq_cls: Seq[Long] = d_record._3.toSeq
+    assert(d_record_eq_cls.length === 1)
+    assert(d_record_eq_cls.filter((x: Long) => x == 1).length === 0)
+    assert(d_record_eq_cls.filter((x: Long) => x == 2).length === 1)
+    assert(d_record_eq_cls.filter((x: Long) => x == 3).length === 0)
+    assert(d_record_eq_cls.filter((x: Long) => x == 4).length === 0)
+  }
+
+  def equalDouble(a: Double, b: Double): Boolean = {
+    math.abs(a - b) < 1e-3
   }
 
   sparkTest("extract lengths from transcripts") {
