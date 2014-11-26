@@ -19,9 +19,10 @@ package org.bdgenomics.RNAdam.algorithms.quantification
 
 import scala.math
 import org.apache.spark.rdd.RDD
+import org.bdgenomics.adam.models.{ Exon, ReferenceRegion, Transcript }
 import org.bdgenomics.adam.util.SparkFunSuite
 
-class QuantifyTestSuite extends SparkFunSuite {
+class QuantifySuite extends SparkFunSuite {
 
   sparkTest("test of mapKmersToClasses") {
     val kmerToEquivalenceClass: RDD[(String, Long)] = sc.parallelize(Seq(("a", 2),
@@ -74,4 +75,64 @@ class QuantifyTestSuite extends SparkFunSuite {
     }))
   }
 
+  sparkTest("extract lengths from transcripts") {
+    val exons1 = Iterable(Exon("e1", "t1", true, ReferenceRegion("1", 0L, 101L)),
+      Exon("e2", "t1", true, ReferenceRegion("1", 200L, 401L)),
+      Exon("e3", "t1", true, ReferenceRegion("1", 500L, 576L)))
+    val exons2 = Iterable(Exon("e1", "t2", false, ReferenceRegion("1", 600L, 651L)),
+      Exon("e2", "t2", false, ReferenceRegion("1", 200L, 401L)),
+      Exon("e3", "t2", false, ReferenceRegion("1", 125L, 176L)),
+      Exon("e4", "t2", false, ReferenceRegion("1", 25L, 76L)))
+
+    val transcripts = Seq(Transcript("t1", Seq("t1"), "g1", true, exons1, Iterable(), Iterable()),
+      Transcript("t2", Seq("t2"), "g1", false, exons2, Iterable(), Iterable()))
+    val rdd = sc.parallelize(transcripts)
+
+    val lengths = Quantify.extractTranscriptLengths(rdd)
+
+    assert(lengths.size === 2)
+    assert(lengths("t1") === 375L)
+    assert(lengths("t2") === 350L)
+  }
+
+  def dummyTranscript(id: String): Transcript = {
+    return new Transcript(id,
+      Seq("test"),
+      "Gene1",
+      true,
+      Iterable(),
+      Iterable(),
+      Iterable())
+  }
+
+  test("Dummy Transcript correctly initialized:") {
+    var t = dummyTranscript("t1")
+    assert(t.id == "t1")
+    assert(t.strand == true)
+  }
+
+  sparkTest("transcripts correctly matched with coverage") {
+    var s1: Double = 1
+    var s2: Double = 2
+    var s3: Double = 3
+    val rdd1 = sc.parallelize(Array(dummyTranscript("t1"),
+      dummyTranscript("t2"),
+      dummyTranscript("t3")))
+    val rdd2 = sc.parallelize(Array(("t1", s1, Iterable[Long]()),
+      ("t2", s2, Iterable[Long]()),
+      ("t3", s3, Iterable[Long]())))
+    val rdd3 = Quantify.joinTranscripts(rdd1, rdd2)
+    val compare = rdd3.collect()
+    for (x <- compare) {
+      if (x._1.id == "t1") {
+        assert(x._2 == s1)
+      }
+      if (x._1.id == "t2") {
+        assert(x._2 == s2)
+      }
+      if (x._1.id == "t3") {
+        assert(x._2 == s3)
+      }
+    }
+  }
 }

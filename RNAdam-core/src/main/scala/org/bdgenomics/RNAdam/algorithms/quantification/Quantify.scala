@@ -46,6 +46,10 @@ object Quantify extends Serializable with Logging {
             kmerLength: Int,
             maxIterations: Int): RDD[(Transcript, Double)] = {
 
+    // cache transcripts, then compute transcript lengths
+    transcripts.cache()
+    val tLen = extractTranscriptLengths(transcripts)
+
     // cut reads into kmers
     val readKmers = reads.adamCountKmers(kmerLength)
 
@@ -57,18 +61,32 @@ object Quantify extends Serializable with Logging {
       equivalenceClassToTranscript)
 
     // we initialize the µ-hat by running a first step of the M algorithm
-    var muHat = m(alpha)
+    var muHat = m(alpha, tLen, kmerLength)
 
     // run iterations of the em algorithm
     (0 until maxIterations).foreach(i => {
       log.info("On iteration " + i + " of EM algorithm.")
 
       alpha = e(muHat)
-      muHat = m(alpha)
+      muHat = m(alpha, tLen, kmerLength)
     })
 
     // join transcripts up and return
     joinTranscripts(transcripts, muHat)
+  }
+
+  /**
+   * Extracts transcripts from an RDD of transcripts. Each transcript has an iterable of
+   * exons, each of which contains the region covered by the exon. We can derive length
+   * from +-reducing the length of these exons.
+   *
+   * @param rdd RDD of transcripts.
+   * @return Returns a map from transcript ID to the transcript length.
+   */
+  private[quantification] def extractTranscriptLengths(rdd: RDD[Transcript]): scala.collection.Map[String, Long] = {
+    rdd.map(t => {
+      (t.id, t.exons.map(_.region.width - 1).reduce(_ + _))
+    }).collectAsMap
   }
 
   /**
@@ -148,11 +166,19 @@ object Quantify extends Serializable with Logging {
    *
    * @param equivalenceClassAssignments An RDD of tuples which map equivalence class IDs to an iterable of
    *                                    tuples which map transcript IDs to alpha assignments.
+   * @param tLen A map assigning transcript IDs to the transcript length.
+   * @param kmerLength The length of the k-mers used for quantification. Used to adjust the transcript length.
    * @return Returns an RDD containing tuples of (transcript ID,
    *                                              normalized coverage,
    *                                              iterable of equivalence class IDs).
    */
-  private[quantification] def m(equivalenceClassAssignments: RDD[(Long, Iterable[(String, Double)])]): RDD[(String, Double, Iterable[Long])] = {
+  private[quantification] def m(equivalenceClassAssignments: RDD[(Long, Iterable[(String, Double)])],
+                                tLen: scala.collection.Map[String, Long],
+                                kmerLength: Int): RDD[(String, Double, Iterable[Long])] = {
+
+    // broadcast the transcript length map
+    val tLenBcast = equivalenceClassAssignments.context.broadcast(tLen)
+
     ???
   }
 
