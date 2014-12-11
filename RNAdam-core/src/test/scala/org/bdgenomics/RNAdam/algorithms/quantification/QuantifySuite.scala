@@ -236,7 +236,12 @@ class QuantifySuite extends SparkFunSuite {
       ("b", 6),
       ("c", 7),
       ("d", 3))
-    val transcriptWeights: RDD[(String, Double, Iterable[Long])] = Quantify.m(equivalenceClassAssignments, tLen, 3)
+    val relNumKmersInEC: Map[Long, Double] = (new HashMap()).+(
+      (1, 0.25),
+      (2, 0.25),
+      (3, 0.25),
+      (4, 0.25))
+    val transcriptWeights: RDD[(String, Double, Iterable[Long])] = Quantify.m(equivalenceClassAssignments, tLen, 3, relNumKmersInEC)
     assert(transcriptWeights.count() === 4)
     val a_record_RDD: RDD[(String, Double, Iterable[Long])] = transcriptWeights.filter((x: (String, Double, Iterable[Long])) => {
       x._1 == "a"
@@ -360,7 +365,7 @@ class QuantifySuite extends SparkFunSuite {
     }
   }
 
-  ignore("quantify unique transcripts") {
+  sparkTest("quantify unique transcripts") {
     // generate transcripts
     val tLen = Seq(1000, 600, 400, 550, 1275, 1400)
     val (transcripts,

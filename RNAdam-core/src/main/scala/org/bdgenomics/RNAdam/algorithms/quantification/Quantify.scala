@@ -56,19 +56,32 @@ object Quantify extends Serializable with Logging {
     // map kmer counts into equivalence classes
     val equivalenceClassCounts = mapKmersToClasses(readKmers, kmerToEquivalenceClass)
 
+    // Cache the RDD equivalenceClassCounts so that it is not computed twice.
+    equivalenceClassCounts.cache()
+
+    // The total of all the equivalence class counts.
+    // Should be equal to the number of kmers.
+    val numKmers: Long = equivalenceClassCounts.map(kv => kv._2).reduce(_ + _)
+
+    // The relative number of kmers in each equivalence class.
+    // This is needed by the maximization step of the EM algorithm below
+    val relNumKmersInEC = equivalenceClassCounts.map((ec: (Long, Long)) => {
+      (ec._1, ec._2.toDouble / numKmers)
+    }).collectAsMap
+
     // we initialize the alphas by splitting all counts equally across transcripts
     var alpha = initializeEM(equivalenceClassCounts,
       equivalenceClassToTranscript)
 
     // we initialize the µ-hat by running a first step of the M algorithm
-    var muHat = m(alpha, tLen, kmerLength)
+    var muHat = m(alpha, tLen, kmerLength, relNumKmersInEC)
 
     // run iterations of the em algorithm
     (0 until maxIterations).foreach(i => {
       log.info("On iteration " + i + " of EM algorithm.")
 
       alpha = e(muHat)
-      muHat = m(alpha, tLen, kmerLength)
+      muHat = m(alpha, tLen, kmerLength, relNumKmersInEC)
     })
 
     // join transcripts up and return
@@ -151,9 +164,11 @@ object Quantify extends Serializable with Logging {
       x._3.map((y: Long) => (y, (x._1, x._2)))
     }).groupByKey()
       .map((c: (Long, Iterable[(String, Double)])) => {
-        val tot: Double = c._2.reduce((m1: (String, Double), m2: (String, Double)) => {
-          (null, m1._2 + m2._2)
-        })._2
+        val tot: Double = c._2.map((tw: (String, Double)) => {
+          tw._2
+        }).reduce((w0: Double, w1: Double) => {
+          w0 + w1
+        })
         (c._1, c._2.map((p: (String, Double)) => (p._1, p._2 / tot)))
       })
   }
@@ -164,8 +179,9 @@ object Quantify extends Serializable with Logging {
    *
    * Per transcript, we first perform an update:
    *
-   * µ_i = \frac{\sum_{s_j \subseteq t_i} α(j,i)}{lhat_i}
+   * µ_i = \frac{\sum_{s_j \subseteq t_i} α(j,i)}{ * k_j}{lhat_i}
    *
+   * k_j is the relative number of k-mers in equivalence class s_j.
    * lhat_i is the adjusted length of transcript i, which equals lhat_i = l_i - k + 1.
    *
    * We then normalize all µ_i by:
@@ -176,20 +192,22 @@ object Quantify extends Serializable with Logging {
    *                                    tuples which map transcript IDs to alpha assignments.
    * @param tLen A map assigning transcript IDs to the transcript length.
    * @param kmerLength The length of the k-mers used for quantification. Used to adjust the transcript length.
+   * @param relNumTxInEC The relative number of transcripts in each equivalence class.
    * @return Returns an RDD containing tuples of (transcript ID,
    *                                              normalized coverage,
    *                                              iterable of equivalence class IDs).
    */
   private[quantification] def m(equivalenceClassAssignments: RDD[(Long, Iterable[(String, Double)])],
                                 tLen: scala.collection.Map[String, Long],
-                                kmerLength: Int): RDD[(String, Double, Iterable[Long])] = {
+                                kmerLength: Int,
+                                relNumKmersInEC: scala.collection.Map[Long, Double]): RDD[(String, Double, Iterable[Long])] = {
 
     // broadcast the transcript length map
     val tLenBcast = equivalenceClassAssignments.context.broadcast(tLen)
 
     val mus: RDD[(String, Double, Iterable[Long])] = equivalenceClassAssignments.flatMap((eca: (Long, Iterable[(String, Double)])) => {
       eca._2.map((ta: (String, Double)) => {
-        (ta._1, (ta._2, eca._1))
+        (ta._1, (ta._2 * relNumKmersInEC(eca._1), eca._1))
       })
     }).groupByKey()
       .map((raw: (String, Iterable[(Double, Long)])) => {
@@ -206,9 +224,11 @@ object Quantify extends Serializable with Logging {
 
     // This normalizes all the µ_i
     // µhat_i = \frac{µ_i}{\sum_{t_j \in T} µ_j}
-    val total_mu: Double = mus.reduce((tme0: (String, Double, Iterable[Long]), tme1: (String, Double, Iterable[Long])) => {
-      (null, tme0._2 + tme1._2, null)
-    })._2
+    val total_mu: Double = mus.map((tme: (String, Double, Iterable[Long])) => {
+      tme._2
+    }).reduce((m0: Double, m1: Double) => {
+      m0 + m1
+    })
 
     // Returns the normalized result.
     mus.map((tme: (String, Double, Iterable[Long])) => {
