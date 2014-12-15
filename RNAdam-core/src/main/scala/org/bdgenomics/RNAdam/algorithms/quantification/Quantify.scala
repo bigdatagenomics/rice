@@ -44,17 +44,23 @@ object Quantify extends Serializable with Logging {
             equivalenceClassToTranscript: RDD[(Long, Iterable[String])],
             transcripts: RDD[Transcript],
             kmerLength: Int,
-            maxIterations: Int): RDD[(Transcript, Double)] = {
+            maxIterations: Int,
+            calibrateKmerBias: Boolean = true): RDD[(Transcript, Double)] = {
 
     // cache transcripts, then compute transcript lengths
     transcripts.cache()
     val tLen = extractTranscriptLengths(transcripts)
 
-    // cut reads into kmers
+    // cut reads into kmers and then calibrate if desired
     val readKmers = reads.adamCountKmers(kmerLength)
+    val calibratedKmers = if (calibrateKmerBias) {
+      Tare.calibrateKmers(readKmers)
+    } else {
+      readKmers
+    }
 
     // map kmer counts into equivalence classes
-    val equivalenceClassCounts = mapKmersToClasses(readKmers, kmerToEquivalenceClass)
+    val equivalenceClassCounts = mapKmersToClasses(calibratedKmers, kmerToEquivalenceClass)
 
     // Cache the RDD equivalenceClassCounts so that it is not computed twice.
     equivalenceClassCounts.cache()
