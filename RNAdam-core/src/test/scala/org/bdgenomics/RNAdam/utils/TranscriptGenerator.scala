@@ -74,6 +74,54 @@ object TranscriptGenerator {
   }
 
   /**
+   * Generates more realistic transcripts. Does this by generating independent strings
+   * per equivalence class, which are then molded into transcripts.
+   *
+   * @param kmerLength K-mer length to use.
+   * @param classSize The size of each equivalence class.
+   * @param classMultiplicity The multiplicity of k-mers per equivalence class.
+   * @param classMembership Per transcript, the classes that make up this transcript.
+   * @param randomSeed An optional random seed.
+   * @return Returns a tuple of (Transcript sequences, transcript names, map from k-mers
+   *         to equivalence class, map from equivalence classes to transcripts).
+   */
+  def generateTranscripts(kmerLength: Int,
+                          classSize: Seq[Int],
+                          classMultiplicity: Seq[Int],
+                          classMembership: Seq[Set[Int]],
+                          randomSeed: Option[Long] = None): (Seq[String], Seq[String], Map[String, Long], Map[Long, Iterable[String]]) = {
+    assert(classMembership.length == classMembership.toSet.size, "Class membership composition must not be repeated.")
+
+    // generate random instance
+    val rv = randomSeed.fold(new Random())(new Random(_))
+
+    // generate independent sequences
+    val (sequences, _, kmerMap, _) = generateIndependentTranscripts(kmerLength, classSize, randomSeed)
+
+    // generate transcripts by randomly merging strings from equivalence sets
+    val transcripts = classMembership.map(s => {
+      // randomly order string components
+      val components = rv.shuffle(s.toSeq.flatMap(i => {
+        (0 until classMultiplicity(i)).map(j => i)
+      }))
+
+      // get transcript strings and reduce down
+      components.map(i => sequences(i)).reduce(_ + _)
+    })
+
+    // generate transcript names
+    val names = (0 until classMembership.length).map(i => i.toString)
+
+    // generate map from equivalence classes to transcripts
+    val tMap = classMembership.zipWithIndex
+      .flatMap(vk => vk._1.map(i => (i, vk._2)))
+      .groupBy(kv => kv._1)
+      .map(kv => (kv._1.toLong, kv._2.map(p => p._2.toString).toIterable))
+
+    (transcripts, names, kmerMap, tMap)
+  }
+
+  /**
    * Generates independent and non-repetitive transcripts.
    *
    * @param The k-mer length to use when verifying independence and non-repetitiveness.

@@ -405,4 +405,64 @@ class QuantifySuite extends SparkFunSuite {
     assert(fpEquals(relativeAbundances("4"), 0.1, 0.05))
     assert(fpEquals(relativeAbundances("5"), 0.1, 0.05))
   }
+
+  sparkTest("quantify a small set of more realistic but unbiased transcripts") {
+    // generate transcripts
+    val classSize = Seq(1000, 500, 700, 400, 400, 200, 100)
+    val classMultiplicity = Seq(1, 1, 1, 1, 2, 2, 3)
+    val classMembership = Seq(Set(0),
+      Set(1, 2),
+      Set(1, 3),
+      Set(1, 4),
+      Set(2, 5),
+      Set(2, 6),
+      Set(3, 6),
+      Set(6))
+    val (transcripts,
+      names,
+      kmerMap,
+      classMap) = TranscriptGenerator.generateTranscripts(20,
+      classSize,
+      classMultiplicity,
+      classMembership,
+      Some(1000L))
+    val tLen = transcripts.map(_.length)
+
+    // generate reads
+    val abundances = Seq(0.05, 0.1, 0.25, 0.1, 0.05, 0.025, 0.025, 0.4)
+    val reads = ReadGenerator(transcripts,
+      abundances,
+      50000,
+      75,
+      Some(5000L))
+
+    // run quantification
+    val relativeAbundances = Quantify(sc.parallelize(reads),
+      sc.parallelize(kmerMap.toSeq),
+      sc.parallelize(classMap.toSeq),
+      sc.parallelize(names.zip(tLen).map(p => Transcript(p._1,
+        Seq(p._1),
+        p._1,
+        true,
+        Iterable(Exon(p._1 + "exon",
+          p._1,
+          true,
+          ReferenceRegion(p._1, 0, p._2.toLong))),
+        Iterable(),
+        Iterable()))),
+      20,
+      50).collect
+      .map(kv => (kv._1.id, kv._2))
+      .toMap
+
+    assert(relativeAbundances.size === 8)
+    assert(fpEquals(relativeAbundances("0"), 0.05, 0.01))
+    assert(fpEquals(relativeAbundances("1"), 0.1, 0.05))
+    assert(fpEquals(relativeAbundances("2"), 0.25, 0.05))
+    assert(fpEquals(relativeAbundances("3"), 0.1, 0.05))
+    assert(fpEquals(relativeAbundances("4"), 0.05, 0.025))
+    assert(fpEquals(relativeAbundances("5"), 0.025, 0.0125))
+    assert(fpEquals(relativeAbundances("6"), 0.025, 0.0125))
+    assert(fpEquals(relativeAbundances("7"), 0.4, 0.05))
+  }
 }
