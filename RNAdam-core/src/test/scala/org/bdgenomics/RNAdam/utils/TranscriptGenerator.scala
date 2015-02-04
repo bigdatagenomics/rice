@@ -39,7 +39,7 @@ object TranscriptGenerator {
    * @param rv A random variable to use.
    * @return Returns a random string composed of 'A', 'C', 'G', 'T'.
    */
-  private[utils] def generateString(length: Int, rv: Random): String = {
+  def generateString(length: Int, rv: Random): String = {
     assert(length > 0)
     val sb = new StringBuilder(length)
     (0 until length).foreach(i => {

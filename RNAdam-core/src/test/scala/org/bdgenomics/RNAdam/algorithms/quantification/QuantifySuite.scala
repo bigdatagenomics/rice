@@ -465,4 +465,46 @@ class QuantifySuite extends SparkFunSuite {
     assert(fpEquals(relativeAbundances("6"), 0.025, 0.0125))
     assert(fpEquals(relativeAbundances("7"), 0.4, 0.05))
   }
+
+  sparkTest("quantify unique transcripts without bias removal") {
+    // generate transcripts
+    val tLen = Seq(1000, 600, 400, 550, 1275, 1400)
+    val (transcripts,
+      names,
+      kmerMap,
+      classMap) = TranscriptGenerator.generateIndependentTranscripts(20,
+      tLen,
+      Some(1234L))
+
+    // generate reads
+    val reads = ReadGenerator(transcripts, Seq(0.2, 0.1, 0.3, 0.2, 0.1, 0.1), 10000, 75, Some(4321L))
+
+    // run quantification
+    val relativeAbundances = Quantify(sc.parallelize(reads),
+      sc.parallelize(kmerMap.toSeq),
+      sc.parallelize(classMap.toSeq),
+      sc.parallelize(names.zip(tLen).map(p => Transcript(p._1,
+        Seq(p._1),
+        p._1,
+        true,
+        Iterable(Exon(p._1 + "exon",
+          p._1,
+          true,
+          ReferenceRegion(p._1, 0, p._2.toLong))),
+        Iterable(),
+        Iterable()))),
+      20,
+      20,
+      false).collect
+      .map(kv => (kv._1.id, kv._2))
+      .toMap
+
+    assert(relativeAbundances.size === 6)
+    assert(fpEquals(relativeAbundances("0"), 0.2, 0.05))
+    assert(fpEquals(relativeAbundances("1"), 0.1, 0.05))
+    assert(fpEquals(relativeAbundances("2"), 0.3, 0.05))
+    assert(fpEquals(relativeAbundances("3"), 0.2, 0.05))
+    assert(fpEquals(relativeAbundances("4"), 0.1, 0.05))
+    assert(fpEquals(relativeAbundances("5"), 0.1, 0.05))
+  }
 }
