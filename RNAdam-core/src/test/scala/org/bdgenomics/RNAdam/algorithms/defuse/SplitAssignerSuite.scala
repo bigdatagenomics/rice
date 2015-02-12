@@ -19,10 +19,10 @@ package org.bdgenomics.RNAdam.algorithms.defuse
 
 import org.bdgenomics.RNAdam.models.{ ReadPair, ApproximateFusionEvent }
 import org.bdgenomics.adam.models.ReferenceRegion
-import org.bdgenomics.adam.util.SparkFunSuite
+import org.bdgenomics.RNAdam.utils.RNAdamFunSuite
 import org.bdgenomics.formats.avro.{ Contig, AlignmentRecord }
 
-class SplitAssignerSuite extends SparkFunSuite {
+class SplitAssignerSuite extends RNAdamFunSuite {
 
   override val properties = Map(("spark.serializer", "org.apache.spark.serializer.KryoSerializer"),
     ("spark.kryo.registrator", "org.bdgenomics.adam.serialization.ADAMKryoRegistrator"),

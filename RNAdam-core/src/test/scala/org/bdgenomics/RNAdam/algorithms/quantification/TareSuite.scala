@@ -18,12 +18,12 @@
 package org.bdgenomics.RNAdam.algorithms.quantification
 
 import org.apache.spark.rdd.RDD
-import org.bdgenomics.adam.util.SparkFunSuite
+import org.bdgenomics.RNAdam.utils.RNAdamFunSuite
 import org.bdgenomics.RNAdam.utils.TranscriptGenerator
 import scala.math.{ abs, exp, log, max, min }
 import scala.util.Random
 
-class TareSuite extends SparkFunSuite {
+class TareSuite extends RNAdamFunSuite {
 
   def fpEquals(a: Double, b: Double, eps: Double = 1e-6): Boolean = {
     abs(a - b) <= eps

@@ -15,19 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.bdgenomics.RNAdam.algorithms.defuse
+package org.bdgenomics.RNAdam.utils
 
-import org.bdgenomics.RNAdam.utils.RNAdamFunSuite
+import org.bdgenomics.utils.misc.SparkFunSuite
 
-class ClassifySuite extends RNAdamFunSuite {
+trait RNAdamFunSuite extends SparkFunSuite {
 
-  override val properties = Map(("spark.serializer", "org.apache.spark.serializer.KryoSerializer"),
+  override val appName: String = "RNAdam"
+  override val properties: Map[String, String] = Map(("spark.serializer", "org.apache.spark.serializer.KryoSerializer"),
     ("spark.kryo.registrator", "org.bdgenomics.adam.serialization.ADAMKryoRegistrator"),
-    ("spark.kryoserializer.buffer.mb", "128"),
+    ("spark.kryoserializer.buffer.mb", "4"),
     ("spark.kryo.referenceTracking", "true"))
-
-  sparkTest("put your test here") {
-    val mySc = sc // this is your SparkContext
-  }
-
 }
+

@@ -17,7 +17,7 @@
   <name>RNAdam: an ADAM-based RNA-seq quantification pipeline</name>
 
   <properties>
-    <adam.version>0.14.1-SNAPSHOT</adam.version>
+    <adam.version>0.15.1-SNAPSHOT</adam.version>
     <avro.version>1.7.4</avro.version>
     <java.version>1.7</java.version>
     <scala.version>2.10.3</scala.version>
@@ -25,6 +25,7 @@
     <spark.version>1.1.0</spark.version>
     <!-- Edit the following line to configure the Hadoop (HDFS) version. -->
     <hadoop.version>2.2.0</hadoop.version>
+    <utils.version>0.1.1</utils.version>
   </properties>
 
   <modules>
@@ -215,10 +216,26 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>org.bdgenomics.bdg-utils</groupId>
+        <artifactId>bdg-utils-misc</artifactId>
+        <version>${utils.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>        
+      </dependency>
+      <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-client</artifactId>
         <version>${hadoop.version}</version>
+        <scope>provided</scope>
         <exclusions>
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.servlet</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
           <exclusion>
             <groupId>asm</groupId>
             <artifactId>asm</artifactId>
@@ -301,16 +318,19 @@
         <groupId>org.apache.spark</groupId>
         <artifactId>spark-core_${scala.version.prefix}</artifactId>
         <version>${spark.version}</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
         <artifactId>spark-mllib_${scala.version.prefix}</artifactId>
         <version>${spark.version}</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
         <artifactId>spark-graphx_${scala.version.prefix}</artifactId>
         <version>${spark.version}</version>
+        <scope>provided</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>

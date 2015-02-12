@@ -20,9 +20,9 @@ package org.bdgenomics.RNAdam.algorithms.cliques
 import org.apache.spark.SparkContext._
 import org.apache.spark.graphx.{ Edge, Graph }
 import org.apache.spark.rdd.RDD
-import org.bdgenomics.adam.util.SparkFunSuite
+import org.bdgenomics.RNAdam.utils.RNAdamFunSuite
 
-class FindCliquesSuite extends SparkFunSuite {
+class FindCliquesSuite extends RNAdamFunSuite {
 
   override val properties = Map(("spark.serializer", "org.apache.spark.serializer.KryoSerializer"),
     ("spark.kryo.registrator", "org.bdgenomics.adam.serialization.ADAMKryoRegistrator"),
