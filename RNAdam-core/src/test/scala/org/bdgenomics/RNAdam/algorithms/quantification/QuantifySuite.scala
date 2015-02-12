@@ -19,13 +19,13 @@ package org.bdgenomics.RNAdam.algorithms.quantification
 
 import org.apache.spark.rdd.RDD
 import org.bdgenomics.adam.models.{ Exon, ReferenceRegion, Transcript }
-import org.bdgenomics.adam.util.SparkFunSuite
+import org.bdgenomics.RNAdam.utils.RNAdamFunSuite
 import org.bdgenomics.RNAdam.utils.{ ReadGenerator, TranscriptGenerator }
 import scala.collection.Map
 import scala.collection.immutable.HashMap
 import scala.math.abs
 
-class QuantifySuite extends SparkFunSuite {
+class QuantifySuite extends RNAdamFunSuite {
 
   def fpEquals(a: Double, b: Double, tol: Double = 1e-3): Boolean = {
     abs(a - b) < tol

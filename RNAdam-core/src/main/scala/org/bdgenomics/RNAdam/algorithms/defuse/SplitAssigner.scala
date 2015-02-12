@@ -20,7 +20,7 @@ package org.bdgenomics.RNAdam.algorithms.defuse
 import org.apache.spark.rdd.RDD
 import org.bdgenomics.RNAdam.models.{ ApproximateFusionEvent, ReadPair }
 import org.bdgenomics.adam.models.{ SequenceDictionary, ReferenceMapping, ReferenceRegion }
-import org.bdgenomics.adam.rdd.RegionJoin
+import org.bdgenomics.adam.rdd.BroadcastRegionJoin
 import org.bdgenomics.adam.rich.ReferenceMappingContext.AlignmentRecordReferenceMapping
 import org.bdgenomics.formats.avro.AlignmentRecord
 import scala.reflect._
@@ -52,7 +52,7 @@ object SplitAssigner {
       if (rp.first.getReadMapped) Some((rp.first, rp)) else None,
       if (rp.second.getReadMapped) Some((rp.second, rp)) else None)
       .flatten)
-    RegionJoin.partitionAndJoin(events.sparkContext, referenceRegions, flattenedRecords)(
+    BroadcastRegionJoin.partitionAndJoin(events.sparkContext, referenceRegions, flattenedRecords)(
       ReferenceRegionApproximateFusionEventReferenceMapping,
       AlignmentRecordReadPairReferenceMapping,
       classTag[(ReferenceRegion, ApproximateFusionEvent)],
