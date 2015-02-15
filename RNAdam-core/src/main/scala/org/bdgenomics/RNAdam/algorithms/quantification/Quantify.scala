@@ -21,7 +21,6 @@ import org.apache.spark.Logging
 import org.apache.spark.rdd.RDD
 import org.apache.spark.SparkContext._
 import org.bdgenomics.adam.rdd.ADAMContext._
-import org.bdgenomics.adam.rdd.read.AlignmentRecordContext._
 import org.bdgenomics.formats.avro.AlignmentRecord
 import org.bdgenomics.adam.models.Transcript
 

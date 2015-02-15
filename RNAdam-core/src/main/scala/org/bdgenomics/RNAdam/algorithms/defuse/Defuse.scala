@@ -22,7 +22,6 @@ import org.apache.spark.rdd.RDD
 import org.bdgenomics.RNAdam.models.{ ApproximateFusionEvent, FusionEvent, ReadPair }
 import org.bdgenomics.adam.models.SequenceDictionary
 import org.bdgenomics.adam.rdd.ADAMContext._
-import org.bdgenomics.adam.rdd.read.AlignmentRecordContext._
 import org.bdgenomics.formats.avro.AlignmentRecord
 
 object Defuse {
