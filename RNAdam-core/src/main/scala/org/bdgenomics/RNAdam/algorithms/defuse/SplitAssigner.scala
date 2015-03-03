@@ -19,25 +19,12 @@ package org.bdgenomics.RNAdam.algorithms.defuse
 
 import org.apache.spark.rdd.RDD
 import org.bdgenomics.RNAdam.models.{ ApproximateFusionEvent, ReadPair }
-import org.bdgenomics.adam.models.{ SequenceDictionary, ReferenceMapping, ReferenceRegion }
+import org.bdgenomics.adam.models.{ SequenceDictionary, ReferenceRegion }
 import org.bdgenomics.adam.rdd.BroadcastRegionJoin
-import org.bdgenomics.adam.rich.ReferenceMappingContext.AlignmentRecordReferenceMapping
 import org.bdgenomics.formats.avro.AlignmentRecord
 import scala.reflect._
 
 object SplitAssigner {
-  case object ReferenceRegionApproximateFusionEventReferenceMapping extends ReferenceMapping[(ReferenceRegion, ApproximateFusionEvent)] {
-    override def getReferenceName(value: (ReferenceRegion, ApproximateFusionEvent)): String = value._1.referenceName
-
-    override def getReferenceRegion(value: (ReferenceRegion, ApproximateFusionEvent)): ReferenceRegion = value._1
-  }
-
-  case object AlignmentRecordReadPairReferenceMapping extends ReferenceMapping[(AlignmentRecord, ReadPair)] {
-    override def getReferenceName(value: (AlignmentRecord, ReadPair)): String = AlignmentRecordReferenceMapping.getReferenceName(value._1)
-
-    override def getReferenceRegion(value: (AlignmentRecord, ReadPair)): ReferenceRegion = AlignmentRecordReferenceMapping.getReferenceRegion(value._1)
-  }
-
   private[this] def referenceRegionsForEvents(events: RDD[ApproximateFusionEvent], lmin: Long, lmax: Long): RDD[(ReferenceRegion, ApproximateFusionEvent)] = {
     events.flatMap(afe => Seq((ReferenceRegion(afe.start.referenceName, afe.start.start - lmax, afe.start.end + lmax), afe),
       (ReferenceRegion(afe.end.referenceName, afe.end.start - lmax, afe.end.end + lmax), afe)))
@@ -49,16 +36,12 @@ object SplitAssigner {
                             lmax: Long): RDD[(ApproximateFusionEvent, ReadPair)] = {
     val referenceRegions = referenceRegionsForEvents(events, lmin, lmax)
     val flattenedRecords = records.flatMap(rp => Seq(
-      if (rp.first.getReadMapped) Some((rp.first, rp)) else None,
-      if (rp.second.getReadMapped) Some((rp.second, rp)) else None)
+      if (rp.first.getReadMapped) Some((ReferenceRegion(rp.first).get, (rp.first, rp))) else None,
+      if (rp.second.getReadMapped) Some((ReferenceRegion(rp.second).get, (rp.second, rp))) else None)
       .flatten)
-    BroadcastRegionJoin.partitionAndJoin(events.sparkContext, referenceRegions, flattenedRecords)(
-      ReferenceRegionApproximateFusionEventReferenceMapping,
-      AlignmentRecordReadPairReferenceMapping,
-      classTag[(ReferenceRegion, ApproximateFusionEvent)],
-      classTag[(AlignmentRecord, ReadPair)])
+    BroadcastRegionJoin.partitionAndJoin(events.sparkContext, referenceRegions, flattenedRecords)
       .map {
-        case ((_, afe), (_, rp)) => (afe, rp)
+        case (afe, (_, rp)) => (afe, rp)
       }
   }
 }
