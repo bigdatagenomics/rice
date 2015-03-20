@@ -39,7 +39,7 @@ object SplitAssigner {
       if (rp.first.getReadMapped) Some((ReferenceRegion(rp.first).get, (rp.first, rp))) else None,
       if (rp.second.getReadMapped) Some((ReferenceRegion(rp.second).get, (rp.second, rp))) else None)
       .flatten)
-    BroadcastRegionJoin.partitionAndJoin(events.sparkContext, referenceRegions, flattenedRecords)
+    BroadcastRegionJoin.partitionAndJoin(referenceRegions, flattenedRecords)
       .map {
         case (afe, (_, rp)) => (afe, rp)
       }
