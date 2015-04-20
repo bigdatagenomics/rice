@@ -67,8 +67,8 @@ object Index extends Serializable with Logging {
    */
   private[quantification] def extractKmers(transcript: Transcript,
                                            kmerLength: Int, 
-                                           referenceFile: ReferenceFile): List[String] = {
-    referenceFile.extract(transcript.region).inits.flatMap(_.tails).filter(_.length == kmerLength).toList
+                                           referenceFile: ReferenceFile): Iterable[String] = {
+    referenceFile.extract(transcript.region).sliding(kmerLength).toIterable
   }
 
   /**
