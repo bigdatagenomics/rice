@@ -23,6 +23,7 @@ import org.apache.spark.SparkContext._
 import org.bdgenomics.adam.rdd.ADAMContext._
 import org.bdgenomics.formats.avro.AlignmentRecord
 import org.bdgenomics.adam.models.Transcript
+import org.bdgenomics.RNAdam.Timers._
 
 object Quantify extends Serializable with Logging {
 
@@ -49,54 +50,80 @@ object Quantify extends Serializable with Logging {
 
     // cache transcripts, then compute transcript lengths
     transcripts.cache()
-    val tLen = extractTranscriptLengths(transcripts)
+    val tLen = ExtractTranscriptLengths.time {
+      extractTranscriptLengths(transcripts)
+    }
 
     // cut reads into kmers and then calibrate if desired
-    val readKmers = reads.adamCountKmers(kmerLength)
+    val readKmers = CountKmers.time {
+      reads.adamCountKmers(kmerLength)
+    }
     val calibratedKmers = if (calibrateKmerBias) {
-      Tare.calibrateKmers(readKmers)
+      TareKmers.time {
+        Tare.calibrateKmers(readKmers)
+      }
     } else {
       readKmers
     }
 
     // map kmer counts into equivalence classes
-    val equivalenceClassCounts = mapKmersToClasses(calibratedKmers, kmerToEquivalenceClass)
+    val equivalenceClassCounts = CountEquivalenceClasses.time {
+      mapKmersToClasses(calibratedKmers, kmerToEquivalenceClass)
+    }
 
     // Cache the RDD equivalenceClassCounts so that it is not computed twice.
     equivalenceClassCounts.cache()
 
-    // The total of all the equivalence class counts.
-    // Should be equal to the number of kmers.
-    val numKmers: Long = equivalenceClassCounts.map(kv => kv._2).reduce(_ + _)
-
     // The relative number of kmers in each equivalence class.
     // This is needed by the maximization step of the EM algorithm below
-    val relNumKmersInEC = equivalenceClassCounts.map((ec: (Long, Long)) => {
-      (ec._1, ec._2.toDouble / numKmers)
-    }).collectAsMap
+    val relNumKmersInEC = NormalizingCounts.time {
+      // The total of all the equivalence class counts.
+      // Should be equal to the number of kmers.
+      val numKmers: Long = equivalenceClassCounts.map(kv => kv._2).reduce(_ + _)
+
+      equivalenceClassCounts.map((ec: (Long, Long)) => {
+        (ec._1, ec._2.toDouble / numKmers)
+      }).collectAsMap
+    }
 
     // we initialize the alphas by splitting all counts equally across transcripts
-    var alpha = initializeEM(equivalenceClassCounts,
-      equivalenceClassToTranscript)
+    var (alpha, muHat) = InitializingEM.time {
+      var alpha_ = InitializingCounts.time {
+        initializeEM(equivalenceClassCounts,
+          equivalenceClassToTranscript)
+      }
 
-    // we initialize the µ-hat by running a first step of the M algorithm
-    var muHat = m(alpha, tLen, kmerLength, relNumKmersInEC)
+      // we initialize the µ-hat by running a first step of the M algorithm
+      var muHat_ = InitializingMu.time {
+        m(alpha_, tLen, kmerLength, relNumKmersInEC)
+      }
+
+      (alpha_, muHat_)
+    }
 
     // run iterations of the em algorithm
-    (0 until maxIterations).foreach(i => {
+    (0 until maxIterations).foreach(i => RunningEMIter.time {
       log.info("On iteration " + i + " of EM algorithm.")
 
-      alpha = e(muHat)
-      muHat = m(alpha, tLen, kmerLength, relNumKmersInEC)
+      alpha = EStage.time {
+        e(muHat)
+      }
+      muHat = MStage.time {
+        m(alpha, tLen, kmerLength, relNumKmersInEC)
+      }
     })
 
     // perform calibration to correct for transcript length bias, if desired
     if (calibrateLengthBias) {
-      muHat = Tare.calibrateTxLenBias(muHat, tLen)
+      CalibratingForLength.time {
+        muHat = Tare.calibrateTxLenBias(muHat, tLen)
+      }
     }
 
     // join transcripts up and return
-    joinTranscripts(transcripts, muHat)
+    JoiningAgainstTranscripts.time {
+      joinTranscripts(transcripts, muHat)
+    }
   }
 
   /**

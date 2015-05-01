@@ -25,17 +25,16 @@ import scala.collection.Map
 import scala.collection.immutable.HashMap
 import scala.math.abs
 import org.bdgenomics.adam.util.ReferenceFile
-import org.bdgenomics.adam.util.{TwoBitFile}
+import org.bdgenomics.adam.util.{ TwoBitFile }
 import org.bdgenomics.utils.parquet.io.{ ByteAccess, ByteArrayByteAccess }
 
 class TestingTwoBitFile(byteAccess: ByteAccess) extends ReferenceFile with Serializable {
-    // Test sequence, len = 24
-    val testSeq = "CAATCCTTCGCCGCAGTGCA"
-    override def extract(region: ReferenceRegion): String = {
-      testSeq.substring(region.start.toInt, region.end.toInt)
-    }
+  // Test sequence, len = 24
+  val testSeq = "CAATCCTTCGCCGCAGTGCA"
+  override def extract(region: ReferenceRegion): String = {
+    testSeq.substring(region.start.toInt, region.end.toInt)
+  }
 }
-
 
 class QuantifySuite extends RNAdamFunSuite {
 
@@ -424,7 +423,6 @@ class QuantifySuite extends RNAdamFunSuite {
     assert(fpEquals(relativeAbundances("5"), 0.1, 0.05))
   }
 
-
   sparkTest("Test of TestingTwoBitFile") {
     val region1 = ReferenceRegion("region1", 0L, 10L)
     val tbf = new TestingTwoBitFile(new ByteArrayByteAccess(new Array[Byte](1)))
@@ -433,17 +431,17 @@ class QuantifySuite extends RNAdamFunSuite {
 
   sparkTest("Test of Index") {
     // Takes a set of transcripts and a twobitfile and a kmer length, then returns a tuple: (kmers -> eq classes, eq class -> iterable of member kmers)
- 
+
     val region1 = ReferenceRegion("region1", 0L, 10L)
     val exon1 = Exon("exon1", "transcript1", true, region1)
     val transcript1 = Transcript("transcript1", Seq("transcript1"), "gene1", true, Iterable(exon1), Iterable(), Iterable())
-      
+
     val region2 = ReferenceRegion("region2", 11L, 20L)
     val exon2 = Exon("exon2", "transcript2", true, region2)
     val transcript2 = Transcript("transcript2", Seq("transcript2"), "gene1", true, Iterable(exon2), Iterable(), Iterable())
-    
+
     val transcripts = sc.parallelize(Seq(transcript1, transcript2))
-    
+
     val tbfile = new TestingTwoBitFile(new ByteArrayByteAccess(new Array[Byte](1)))
 
     // List of ( ... (kmer, class id) ... ) AND (... (id, list of kmers) ...) 
@@ -451,7 +449,6 @@ class QuantifySuite extends RNAdamFunSuite {
 
     val kToEq = kmersToEq.collect()
     val eqToK = eqToKmers.collect()
-
 
     // Tracking 3 particular kmers: "CAATC", "GTGCA", "CTTCG"
     // Should be at least 2 eq classes, such that one contains both "CAATC" and "CTTCG", while the ther contains "GTGCA"
