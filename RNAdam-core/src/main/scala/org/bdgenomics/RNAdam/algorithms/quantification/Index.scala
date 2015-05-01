@@ -23,6 +23,7 @@ import org.apache.spark.SparkContext._
 import org.bdgenomics.adam.rdd.ADAMContext._
 import org.bdgenomics.formats.avro.NucleotideContigFragment
 import org.bdgenomics.adam.models.{ Exon, Transcript }
+import org.bdgenomics.RNAdam.Timers._
 import org.bdgenomics.adam.util.{ TwoBitFile, ReferenceFile }
 
 object Index extends Serializable with Logging {
@@ -54,21 +55,25 @@ object Index extends Serializable with Logging {
     findEquivalenceClasses(transcripts, kmerLength, referenceFile)
   }
 
-
   /**
-   * Given a transcript, length and 2BitFile, this method extracts kmers of the specified 
+   * Given a transcript, length and 2BitFile, this method extracts kmers of the specified
    * length from the transcript
    *
-   *@param transcript A Transcript object
-   *@param kmerLength The length of kmers to extract
-   *@param referenceFile The ReferenceFile representing the chromosome
-   *@return Returns a list of kmers contained in Transcript
+   * @param transcript A Transcript object
+   * @param kmerLength The length of kmers to extract
+   * @param referenceFile The ReferenceFile representing the chromosome
+   * @return Returns a list of kmers contained in Transcript
    *
    */
   private[quantification] def extractKmers(transcript: Transcript,
-                                           kmerLength: Int, 
+                                           kmerLength: Int,
                                            referenceFile: ReferenceFile): Iterable[String] = {
-    referenceFile.extract(transcript.region).sliding(kmerLength).toIterable
+    val sequence = Extract.time {
+      referenceFile.extract(transcript.region)
+    }
+    SplitKmers.time {
+      sequence.sliding(kmerLength).toIterable
+    }
   }
 
   /**
@@ -91,21 +96,27 @@ object Index extends Serializable with Logging {
     val refFile = transcripts.context.broadcast(referenceFile)
 
     // RDD of (list of kmers in eq class, equivalence class ID)
-    val kmersToClasses = transcripts.flatMap(t => {for(k <- extractKmers(t, kmerLength, refFile.value)) 
-                                                  yield ((t.id, k), 1)} )                       // ((t.id, kmer), 1)
-                                    .foldByKey(0)(_+_)                                          // ((t,id, kmer), abundance)
-                                    .map(v => ((v._1._1, v._2), v._1._2))                       // ((t.id, abundance), kmer)
-                                    .groupByKey()                                               // ((t.id, abundance), all kmers with same pattern) = (eq class, all kmers in class)
-                                    .map(v => v._2)                                             // (kmers in eq class)
-                                    .zipWithIndex()                                             // (kmers in eq class, class ID)
+    val kmersToClasses = GenerateClasses.time {
+      transcripts.flatMap(t => {
+        val kmers = extractKmers(t, kmerLength, refFile.value)
+        kmers.map(k => ((t.id, k), 1))
+      }).foldByKey(0)(_ + _)
+        .map(v => ((v._1._1, v._2), v._1._2))
+        .groupByKey()
+        .map(v => v._2)
+        .zipWithIndex()
+    }
 
-    // RDD of (kmer, equivalence class ID)
-    val kmerToClassID = kmersToClasses.flatMap(v => {for(k <- v._1) yield (k, v._2)})           // (kmer, class ID)
+    GenerateIndices.time {
+      // RDD of (kmer, equivalence class ID)
+      val kmerToClassID = kmersToClasses.flatMap(v => {
+        v._1.map((_, v._2))
+      })
 
-    // RDD of (equivalence class ID, list of kmers)
-    val idsToKmers = kmersToClasses.map(v => (v._2, v._1))                                      // (class ID, list of kmers)
+      // RDD of (equivalence class ID, list of kmers)
+      val idsToKmers = kmersToClasses.map(v => (v._2, v._1))
 
-    (kmerToClassID, idsToKmers)
+      (kmerToClassID, idsToKmers)
+    }
   }
-
 }
