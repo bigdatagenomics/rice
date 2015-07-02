@@ -24,6 +24,12 @@ import org.bdgenomics.utils.instrumentation.Metrics
  */
 private[RNAdam] object Timers extends Metrics {
 
+  // CLI
+  val LoadingTwoBit = timer("Loading Two Bit File")
+  val LoadingGenes = timer("Loading gene descriptions")
+  val Indexing = timer("Indexing k-mers")
+  val Saving = timer("Saving index")
+
   // Indexing
   val Extract = timer("Extracting Transcript from Reference")
   val SplitKmers = timer("Splitting k-mers from Transcript")
@@ -45,4 +51,3 @@ private[RNAdam] object Timers extends Metrics {
   val CalibratingForLength = timer("Calibrating vs. Transcript Length")
   val JoiningAgainstTranscripts = timer("Joining vs. Transcripts")
 }
-

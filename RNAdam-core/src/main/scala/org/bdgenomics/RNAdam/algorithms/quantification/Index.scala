@@ -55,26 +55,6 @@ object Index extends Serializable with Logging {
     findEquivalenceClasses(transcripts, kmerLength, referenceFile)
   }
 
-  /**
-   * Given a transcript, length and 2BitFile, this method extracts kmers of the specified
-   * length from the transcript
-   *
-   * @param transcript A Transcript object
-   * @param kmerLength The length of kmers to extract
-   * @param referenceFile The ReferenceFile representing the chromosome
-   * @return Returns a list of kmers contained in Transcript
-   *
-   */
-  private[quantification] def extractKmers(transcript: Transcript,
-                                           kmerLength: Int,
-                                           referenceFile: ReferenceFile): Iterable[String] = {
-    val sequence = Extract.time {
-      referenceFile.extract(transcript.region)
-    }
-    SplitKmers.time {
-      sequence.sliding(kmerLength).toIterable
-    }
-  }
 
   /**
    * Given an RDD of transcripts, this method finds the k-mer equivalence classes. K-mer
@@ -98,9 +78,14 @@ object Index extends Serializable with Logging {
     // RDD of (list of kmers in eq class, equivalence class ID)
     val kmersToClasses = GenerateClasses.time {
       transcripts.flatMap(t => {
-        val kmers = extractKmers(t, kmerLength, refFile.value)
+        val sequence = Extract.time {
+          refFile.value.extract(t.region)
+        }
+        val kmers = SplitKmers.time {
+          sequence.sliding(kmerLength).toIterable
+        }
         kmers.map(k => ((t.id, k), 1))
-      }).foldByKey(0)(_ + _)
+      }).reduceByKey(_ + _)
         .map(v => ((v._1._1, v._2), v._1._2))
         .groupByKey()
         .map(v => v._2)

@@ -20,8 +20,10 @@ package org.bdgenomics.RNAdam.cli
 import java.io.File
 import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.{ Logging, SparkContext }
+import org.apache.spark.rdd.MetricsContext._
 import org.bdgenomics.adam.rdd.ADAMContext._
 import org.bdgenomics.adam.util.{ TwoBitFile, ReferenceFile }
+import org.bdgenomics.RNAdam.Timers._
 import org.bdgenomics.RNAdam.algorithms.quantification.{ Index => Indexer }
 import org.bdgenomics.RNAdam.avro._
 import org.bdgenomics.utils.cli._
@@ -57,28 +59,37 @@ class Index(protected val args: IndexArgs) extends BDGSparkCommand[IndexArgs] wi
 
   def run(sc: SparkContext, job: Job) {
     // load genome
-    val genome = new TwoBitFile(new LocalFileByteAccess(new File(args.genome)))
+    val genome = LoadingTwoBit.time {
+      new TwoBitFile(new LocalFileByteAccess(new File(args.genome)))
+    }
 
     // load gene annotations and transform to transcripts
-    val transcripts = sc.loadGenes(args.genes)
-      .flatMap(_.transcripts)
+    val transcripts = LoadingGenes.time {
+      sc.loadGenes(args.genes)
+        .flatMap(_.transcripts)
+        .instrument()
+    }
 
     // run indexing
-    val (kmerMap, classMap) = Indexer(genome, transcripts, args.kmerLength)
+    val (kmerMap, classMap) = Indexing.time {
+      Indexer(genome, transcripts, args.kmerLength)
+    }
 
     // map to avro classes and save indices
-    kmerMap.map(kv => {
-      KmerToClass.newBuilder()
-        .setKmer(kv._1)
-        .setEquivalenceClass(kv._2)
-        .build()
-    }).saveAsParquet(args.output + "_kmers")
+    Saving.time {
+      kmerMap.map(kv => {
+        KmerToClass.newBuilder()
+          .setKmer(kv._1)
+          .setEquivalenceClass(kv._2)
+          .build()
+      }).saveAsParquet(args.output + "_kmers")
 
-    classMap.map(kv => {
-      ClassContents.newBuilder()
-        .setEquivalenceClass(kv._1)
-        .setKmers(kv._2.toList)
-        .build()
-    }).saveAsParquet(args.output + "_classes")
+      classMap.map(kv => {
+        ClassContents.newBuilder()
+          .setEquivalenceClass(kv._1)
+          .setKmers(kv._2.toList)
+          .build()
+      }).saveAsParquet(args.output + "_classes")
+    }
   }
 }
