@@ -10,11 +10,11 @@
   </parent>
   
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.bdgenomics.RNAdam</groupId>
-  <artifactId>RNAdam-parent</artifactId>
+  <groupId>org.bdgenomics.rice</groupId>
+  <artifactId>rice-parent</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <name>RNAdam: an ADAM-based RNA-seq quantification pipeline</name>
+  <name>rice: an ADAM-based RNA-seq quantification pipeline</name>
 
   <properties>
     <adam.version>0.16.1-SNAPSHOT</adam.version>
@@ -30,23 +30,23 @@
   </properties>
 
   <modules>
-    <module>RNAdam-schemas</module>
-    <module>RNAdam-core</module>
-    <module>RNAdam-cli</module>
+    <module>rice-schemas</module>
+    <module>rice-core</module>
+    <module>rice-cli</module>
   </modules>
 
   <licenses>
     <license>
       <name>Apache License</name>
-      <url>https://raw.github.com/bigdatagenomics/RNAdam/master/LICENSE.txt</url>
+      <url>https://raw.github.com/bigdatagenomics/rice/master/LICENSE.txt</url>
       <distribution>repo</distribution>
     </license>
   </licenses>
 
   <scm>
-    <connection>scm:git:git@github.com:bigdatagenomics/RNAdam.git</connection>
-    <developerConnection>scm:git:git@github.com:bigdatagenomics/RNAdam.git</developerConnection>
-    <url>scm:git:git@github.com:bigdatagenomics/RNAdam.git</url>
+    <connection>scm:git:git@github.com:bigdatagenomics/rice.git</connection>
+    <developerConnection>scm:git:git@github.com:bigdatagenomics/rice.git</developerConnection>
+    <url>scm:git:git@github.com:bigdatagenomics/rice.git</url>
     <tag>HEAD</tag>
   </scm>
 
@@ -83,7 +83,7 @@
 
   <issueManagement>
     <system>github</system>
-    <url>https://github.com/bigdatagenomics/RNAdam/issues</url>
+    <url>https://github.com/bigdatagenomics/rice/issues</url>
   </issueManagement>
 
   <build>
@@ -248,13 +248,13 @@
         <version>2.0.23</version>
       </dependency>
       <dependency>
-        <groupId>org.bdgenomics.RNAdam</groupId>
-        <artifactId>RNAdam-schemas</artifactId>
+        <groupId>org.bdgenomics.rice</groupId>
+        <artifactId>rice-schemas</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.bdgenomics.RNAdam</groupId>
-        <artifactId>RNAdam-core</artifactId>
+        <groupId>org.bdgenomics.rice</groupId>
+        <artifactId>rice-core</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
