@@ -25,6 +25,7 @@ import org.bdgenomics.formats.avro.NucleotideContigFragment
 import org.bdgenomics.adam.models.{ Exon, Transcript }
 import org.bdgenomics.RNAdam.Timers._
 import org.bdgenomics.adam.util.{ TwoBitFile, ReferenceFile }
+import scala.util.hashing.MurmurHash3
 
 object Index extends Serializable with Logging {
 
@@ -55,7 +56,6 @@ object Index extends Serializable with Logging {
     findEquivalenceClasses(transcripts, kmerLength, referenceFile)
   }
 
-
   /**
    * Given an RDD of transcripts, this method finds the k-mer equivalence classes. K-mer
    * equivalence classes represent k-mers that show up with equal abundance across several
@@ -73,23 +73,30 @@ object Index extends Serializable with Logging {
                                                      kmerLength: Int,
                                                      referenceFile: ReferenceFile): (RDD[(String, Long)], RDD[(Long, Iterable[String])]) = {
     // Broadcast variable representing the reference file:
-    val refFile = transcripts.context.broadcast(referenceFile)
+    val refFile = Broadcast.time {
+      transcripts.context.broadcast(referenceFile)
+    }
 
     // RDD of (list of kmers in eq class, equivalence class ID)
     val kmersToClasses = GenerateClasses.time {
-      transcripts.flatMap(t => {
-        val sequence = Extract.time {
-          refFile.value.extract(t.region)
-        }
-        val kmers = SplitKmers.time {
-          sequence.sliding(kmerLength).toIterable
-        }
-        kmers.map(k => ((t.id, k), 1))
-      }).reduceByKey(_ + _)
-        .map(v => ((v._1._1, v._2), v._1._2))
-        .groupByKey()
-        .map(v => v._2)
-        .zipWithIndex()
+      val kmersAndTranscript = KmersAndTranscript.time {
+        transcripts.flatMap(t => {
+          val sequence = Extract.time {
+            refFile.value.extract(t.region)
+          }
+          val kmers = SplitKmers.time {
+            sequence.sliding(kmerLength).toIterable
+          }
+          kmers.map(k => ((t.id, k), 1))
+        })
+      }
+
+      val kmersByCount = CollectingKmersByCount.time { kmersAndTranscript.reduceByKey(_ + _) }
+      val sortByTranscript = SortByTranscript.time { kmersByCount.map(v => ((v._1._1, v._2), v._1._2)) }
+      val kmersByTranscript = CollectingKmersByTranscript.time { sortByTranscript.groupByKey() }
+      val eqClasses = DistillingEqClasses.time { kmersByTranscript.map(v => v._2) }
+      val numberedEqClasses = NumberingEqClasses.time { eqClasses.zipWithUniqueId() }
+      numberedEqClasses
     }
 
     GenerateIndices.time {
