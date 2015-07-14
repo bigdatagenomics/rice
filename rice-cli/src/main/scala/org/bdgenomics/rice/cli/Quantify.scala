@@ -17,18 +17,17 @@
  */
 package org.bdgenomics.rice.cli
 
-import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.{ Logging, SparkContext }
 import org.apache.spark.rdd.RDD
 import org.bdgenomics.adam.rdd.ADAMContext._
 import org.bdgenomics.rice.algorithms.{ Quantify => Quantifier }
 import org.bdgenomics.rice.avro._
 import org.bdgenomics.utils.cli._
-import org.bdgenomics.utils.parquet.rdd.BDGParquetContext._
+import org.bdgenomics.utils.misc.HadoopUtil
 import org.kohsuke.args4j.{ Argument, Option => Args4jOption }
-import parquet.avro.AvroReadSupport
-import parquet.hadoop.ParquetInputFormat
-import parquet.hadoop.util.ContextUtil
+import org.apache.parquet.avro.AvroReadSupport
+import org.apache.parquet.hadoop.ParquetInputFormat
+import org.apache.parquet.hadoop.util.ContextUtil
 
 object Quantify extends BDGCommandCompanion {
   val commandName = "quantify"
@@ -68,12 +67,13 @@ class QuantifyArgs extends Args4jBase {
 class Quantify(protected val args: QuantifyArgs) extends BDGSparkCommand[QuantifyArgs] with Logging {
   val companion = Quantify
 
-  def run(sc: SparkContext, job: Job) {
+  def run(sc: SparkContext) {
 
     // load reads
     val reads = sc.loadAlignments(args.reads)
 
     // load index maps
+    val job = HadoopUtil.newJob(sc)
     ParquetInputFormat.setReadSupportClass(job, classOf[AvroReadSupport[KmerToClass]])
     val kmerMap: RDD[(String, Long)] = sc.newAPIHadoopFile(args.index + "_kmers",
       classOf[ParquetInputFormat[KmerToClass]],

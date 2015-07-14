@@ -18,7 +18,6 @@
 package org.bdgenomics.rice.cli
 
 import java.io.File
-import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.{ Logging, SparkContext }
 import org.apache.spark.rdd.MetricsContext._
 import org.bdgenomics.adam.rdd.ADAMContext._
@@ -27,8 +26,7 @@ import org.bdgenomics.rice.Timers._
 import org.bdgenomics.rice.algorithms.{ Index => Indexer }
 import org.bdgenomics.rice.avro._
 import org.bdgenomics.utils.cli._
-import org.bdgenomics.utils.parquet.io.{ LocalFileByteAccess }
-import org.bdgenomics.utils.parquet.rdd.BDGParquetContext._
+import org.bdgenomics.utils.io.{ LocalFileByteAccess }
 import org.kohsuke.args4j.{ Argument, Option => Args4jOption }
 
 object Index extends BDGCommandCompanion {
@@ -57,7 +55,7 @@ class IndexArgs extends Args4jBase {
 class Index(protected val args: IndexArgs) extends BDGSparkCommand[IndexArgs] with Logging {
   val companion = Index
 
-  def run(sc: SparkContext, job: Job) {
+  def run(sc: SparkContext) {
     // load genome
     val genome = LoadingTwoBit.time {
       new TwoBitFile(new LocalFileByteAccess(new File(args.genome)))
@@ -77,12 +75,19 @@ class Index(protected val args: IndexArgs) extends BDGSparkCommand[IndexArgs] wi
 
     // map to avro classes and save indices
     SavingClasses.time {
+      kmerMap.map(kv => {
+        KmerToClass.newBuilder()
+          .setKmer(kv._1)
+          .setEquivalenceClass(kv._2)
+          .build()
+      }).adamParquetSave(args.output + "_kmers")
+
       classMap.map(kv => {
         ClassContents.newBuilder()
           .setEquivalenceClass(kv._1)
           .setKmers(kv._2.toList)
           .build()
-      }).saveAsParquet(args.output + "_classes")
+      }).adamParquetSave(args.output + "_classes")
     }
     SavingKmers.time {
       kmerMap.map(kv => {

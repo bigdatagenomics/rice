@@ -121,7 +121,7 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.twitter</groupId>
+      <groupId>org.apache.parquet</groupId>
       <artifactId>parquet-avro</artifactId>
     </dependency>
     <dependency>
@@ -137,16 +137,16 @@
       <artifactId>rice-schemas</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.bdgenomics.bdg-utils</groupId>
-      <artifactId>bdg-utils-parquet</artifactId>
+      <groupId>org.bdgenomics.utils</groupId>
+      <artifactId>utils-io_${scala.version.prefix}</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.bdgenomics.bdg-utils</groupId>
-      <artifactId>bdg-utils-cli</artifactId>
+      <groupId>org.bdgenomics.utils</groupId>
+      <artifactId>utils-cli_${scala.version.prefix}</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.bdgenomics.bdg-utils</groupId>
-      <artifactId>bdg-utils-misc</artifactId>
+      <groupId>org.bdgenomics.utils</groupId>
+      <artifactId>utils-misc_${scala.version.prefix}</artifactId>
       <type>test-jar</type>
       <scope>test</scope>        
     </dependency>
@@ -156,11 +156,11 @@
     </dependency>
     <dependency>
       <groupId>org.bdgenomics.adam</groupId>
-      <artifactId>adam-core</artifactId>
+      <artifactId>adam-core_${scala.version.prefix}</artifactId>
     </dependency>
     <dependency>
       <groupId>org.bdgenomics.adam</groupId>
-      <artifactId>adam-core</artifactId>
+      <artifactId>adam-core_${scala.version.prefix}</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
@@ -171,10 +171,6 @@
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-mllib_${scala.version.prefix}</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-graphx_${scala.version.prefix}</artifactId>
     </dependency>
     <dependency>
       <groupId>org.scalatest</groupId>

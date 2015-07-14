@@ -26,7 +26,7 @@ import scala.collection.immutable.HashMap
 import scala.math.abs
 import org.bdgenomics.adam.util.ReferenceFile
 import org.bdgenomics.adam.util.{ TwoBitFile }
-import org.bdgenomics.utils.parquet.io.{ ByteAccess, ByteArrayByteAccess }
+import org.bdgenomics.utils.io.{ ByteAccess, ByteArrayByteAccess }
 
 class TestingTwoBitFile(byteAccess: ByteAccess) extends ReferenceFile with Serializable {
   // Test sequence, len = 24
