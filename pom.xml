@@ -22,8 +22,6 @@
     <hadoop.version>2.2.0</hadoop.version>
     <java.version>1.7</java.version>
     <parquet.version>1.7.0</parquet.version>
-    <scala.version>2.10.3</scala.version>
-    <scala.version.prefix>2.10</scala.version.prefix>
     <spark.version>1.2.1</spark.version>
     <!-- Edit the following line to configure the Hadoop (HDFS) version. -->
     <utils.version>0.2.2</utils.version>
@@ -81,8 +79,8 @@
   </issueManagement>
 
   <build>
-    <outputDirectory>target/scala-${scala.version}/classes</outputDirectory>
-    <testOutputDirectory>target/scala-${scala.version}/test-classes</testOutputDirectory>
+    <outputDirectory>target/scala-2.10.4/classes</outputDirectory>
+    <testOutputDirectory>target/scala-2.10.4/test-classes</testOutputDirectory>
     <pluginManagement>
       <plugins>
         <plugin>
@@ -156,8 +154,7 @@
           </execution>
         </executions>
         <configuration>
-          <scalaVersion>${scala.version}</scalaVersion>
-          <recompileMode>incremental</recompileMode>
+          <scalaVersion>2.10.4</scalaVersion>
           <useZincServer>true</useZincServer>
           <args>
             <arg>-unchecked</arg>
@@ -253,25 +250,25 @@
       </dependency>
       <dependency>
         <groupId>org.bdgenomics.utils</groupId>
-        <artifactId>utils-misc_${scala.version.prefix}</artifactId>
+        <artifactId>utils-misc_2.10</artifactId>
         <version>${utils.version}</version>
         <type>test-jar</type>
         <scope>test</scope>        
       </dependency>
       <dependency>
         <groupId>org.bdgenomics.utils</groupId>
-        <artifactId>utils-cli_${scala.version.prefix}</artifactId>
+        <artifactId>utils-cli_2.10</artifactId>
         <version>${utils.version}</version>
       </dependency>
       <dependency>
         <groupId>org.bdgenomics.utils</groupId>
-        <artifactId>utils-io_${scala.version.prefix}</artifactId>
+        <artifactId>utils-io_2.10</artifactId>
         <version>${utils.version}</version>
       </dependency>
       <!-- We exclude this from adam, so we need to manually include it -->
       <dependency>
         <groupId>org.bdgenomics.utils</groupId>
-        <artifactId>utils-metrics_${scala.version.prefix}</artifactId>
+        <artifactId>utils-metrics_2.10</artifactId>
         <version>${utils.version}</version>
       </dependency>
       <dependency>
@@ -304,20 +301,20 @@
       </dependency>
       <dependency>
         <groupId>org.bdgenomics.adam</groupId>
-        <artifactId>adam-core_${scala.version.prefix}</artifactId>
+        <artifactId>adam-core_2.10</artifactId>
         <version>${adam.version}</version>
       </dependency>
       <dependency>
         <groupId>org.bdgenomics.adam</groupId>
-        <artifactId>adam-core_${scala.version.prefix}</artifactId>
+        <artifactId>adam-core_2.10</artifactId>
         <version>${adam.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.scalatest</groupId>
-        <artifactId>scalatest_${scala.version.prefix}</artifactId>
-        <version>1.9.2</version>
+        <artifactId>scalatest_2.10</artifactId>
+        <version>2.2.2</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -332,13 +329,13 @@
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-core_${scala.version.prefix}</artifactId>
+        <artifactId>spark-core_2.10</artifactId>
         <version>${spark.version}</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-mllib_${scala.version.prefix}</artifactId>
+        <artifactId>spark-mllib_2.10</artifactId>
         <version>${spark.version}</version>
         <scope>provided</scope>
       </dependency>
