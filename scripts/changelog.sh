@@ -15,11 +15,11 @@ else
   exit 1
 fi
 
-echo "# tbd #"
+echo "# RICE #"
 
 git log | grep -E "Merge pull request|prepare release" | grep -vi "Revert" | uniq | while read l
 do 
-  release=`echo $l | grep "\[maven-release-plugin\] prepare release" | cut -d "-" -f 5`
+  release=`echo $l | grep "prepare release" | grep -v 2.11 | awk -F'-' '{print $NF}' | awk -F'_' '{ print $1 }'`
   PR=`echo $l| grep -E -o "Merge pull request #[^ ]*" | cut -d "#" -f 2`
 #  echo $l
   if [ -n "$release" ] 
@@ -29,9 +29,9 @@ do
   fi
   if [ -n "$PR" ]
   then
-    JSON=`curl -u $username:$password -s https://api.github.com/repos/fnothaft/tbd/pulls/$PR | tr "\n" " "`
-    DESC_RAW=$(echo $JSON |  grep -Po '"title":.*?[^\\]",' | cut -d "\"" -f 4- | head -n 1 | sed -e "s/\\\\//g")
+    JSON=`curl -u $username:$password -s https://api.github.com/repos/bigdatagenomics/rice/pulls/$PR | tr "\n" " "`
+    DESC_RAW=$(echo $JSON | egrep -o '"title":.*?[^\\]",' | cut -d "\"" -f 4- | head -n 1 | sed -e "s/\\\\//g")
     DESC=$(echo ${DESC_RAW%\",})
-    echo "* ISSUE [$PR](https://github.com/fnothaft/tbd/pull/$PR): ${DESC}"
+    echo "* ISSUE [$PR](https://github.com/bigdatagenomics/rice/pull/$PR): ${DESC}"
   fi
 done

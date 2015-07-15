@@ -10,43 +10,41 @@
   </parent>
   
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.bdgenomics.RNAdam</groupId>
-  <artifactId>RNAdam-parent</artifactId>
+  <groupId>org.bdgenomics.rice</groupId>
+  <artifactId>rice-parent</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <name>RNAdam: an ADAM-based RNA-seq quantification pipeline</name>
+  <name>rice: an ADAM-based RNA-seq quantification pipeline</name>
 
   <properties>
-    <adam.version>0.16.1-SNAPSHOT</adam.version>
+    <adam.version>0.17.0</adam.version>
     <avro.version>1.7.6</avro.version>
     <hadoop.version>2.2.0</hadoop.version>
     <java.version>1.7</java.version>
-    <parquet.version>1.6.0rc4</parquet.version>
-    <scala.version>2.10.3</scala.version>
-    <scala.version.prefix>2.10</scala.version.prefix>
-    <spark.version>1.2.0</spark.version>
+    <parquet.version>1.7.0</parquet.version>
+    <spark.version>1.2.1</spark.version>
     <!-- Edit the following line to configure the Hadoop (HDFS) version. -->
-    <utils.version>0.1.3-SNAPSHOT</utils.version>
+    <utils.version>0.2.2</utils.version>
   </properties>
 
   <modules>
-    <module>RNAdam-schemas</module>
-    <module>RNAdam-core</module>
-    <module>RNAdam-cli</module>
+    <module>rice-schemas</module>
+    <module>rice-core</module>
+    <module>rice-cli</module>
   </modules>
 
   <licenses>
     <license>
       <name>Apache License</name>
-      <url>https://raw.github.com/bigdatagenomics/RNAdam/master/LICENSE.txt</url>
+      <url>https://raw.github.com/bigdatagenomics/rice/master/LICENSE.txt</url>
       <distribution>repo</distribution>
     </license>
   </licenses>
 
   <scm>
-    <connection>scm:git:git@github.com:bigdatagenomics/RNAdam.git</connection>
-    <developerConnection>scm:git:git@github.com:bigdatagenomics/RNAdam.git</developerConnection>
-    <url>scm:git:git@github.com:bigdatagenomics/RNAdam.git</url>
+    <connection>scm:git:git@github.com:bigdatagenomics/rice.git</connection>
+    <developerConnection>scm:git:git@github.com:bigdatagenomics/rice.git</developerConnection>
+    <url>scm:git:git@github.com:bigdatagenomics/rice.git</url>
     <tag>HEAD</tag>
   </scm>
 
@@ -73,22 +71,16 @@
       <organization>U.C. Berkeley, Department of Electrical Engineering and  Computer Science</organization>
       <organizationUrl>http://www.cs.berkeley.edu/</organizationUrl>
     </developer>
-    <developer>
-      <id>tdanford</id>
-      <name>Timothy Danford</name>
-      <email>tdanford@gmail.com</email>
-      <organization>The GenomeBridge</organization>
-    </developer>
   </developers>
 
   <issueManagement>
     <system>github</system>
-    <url>https://github.com/bigdatagenomics/RNAdam/issues</url>
+    <url>https://github.com/bigdatagenomics/rice/issues</url>
   </issueManagement>
 
   <build>
-    <outputDirectory>target/scala-${scala.version}/classes</outputDirectory>
-    <testOutputDirectory>target/scala-${scala.version}/test-classes</testOutputDirectory>
+    <outputDirectory>target/scala-2.10.4/classes</outputDirectory>
+    <testOutputDirectory>target/scala-2.10.4/test-classes</testOutputDirectory>
     <pluginManagement>
       <plugins>
         <plugin>
@@ -162,8 +154,7 @@
           </execution>
         </executions>
         <configuration>
-          <scalaVersion>${scala.version}</scalaVersion>
-          <recompileMode>incremental</recompileMode>
+          <scalaVersion>2.10.4</scalaVersion>
           <useZincServer>true</useZincServer>
           <args>
             <arg>-unchecked</arg>
@@ -238,7 +229,7 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>com.twitter</groupId>
+        <groupId>org.apache.parquet</groupId>
         <artifactId>parquet-avro</artifactId>
         <version>${parquet.version}</version>
       </dependency>
@@ -248,36 +239,36 @@
         <version>2.0.23</version>
       </dependency>
       <dependency>
-        <groupId>org.bdgenomics.RNAdam</groupId>
-        <artifactId>RNAdam-schemas</artifactId>
+        <groupId>org.bdgenomics.rice</groupId>
+        <artifactId>rice-schemas</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.bdgenomics.RNAdam</groupId>
-        <artifactId>RNAdam-core</artifactId>
+        <groupId>org.bdgenomics.rice</groupId>
+        <artifactId>rice-core</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.bdgenomics.bdg-utils</groupId>
-        <artifactId>bdg-utils-misc</artifactId>
+        <groupId>org.bdgenomics.utils</groupId>
+        <artifactId>utils-misc_2.10</artifactId>
         <version>${utils.version}</version>
         <type>test-jar</type>
         <scope>test</scope>        
       </dependency>
       <dependency>
-        <groupId>org.bdgenomics.bdg-utils</groupId>
-        <artifactId>bdg-utils-cli</artifactId>
+        <groupId>org.bdgenomics.utils</groupId>
+        <artifactId>utils-cli_2.10</artifactId>
         <version>${utils.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.bdgenomics.bdg-utils</groupId>
-        <artifactId>bdg-utils-parquet</artifactId>
+        <groupId>org.bdgenomics.utils</groupId>
+        <artifactId>utils-io_2.10</artifactId>
         <version>${utils.version}</version>
       </dependency>
       <!-- We exclude this from adam, so we need to manually include it -->
       <dependency>
-        <groupId>org.bdgenomics.bdg-utils</groupId>
-        <artifactId>bdg-utils-metrics</artifactId>
+        <groupId>org.bdgenomics.utils</groupId>
+        <artifactId>utils-metrics_2.10</artifactId>
         <version>${utils.version}</version>
       </dependency>
       <dependency>
@@ -287,37 +278,6 @@
         <scope>provided</scope>
         <exclusions>
           <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>javax.servlet</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>asm</groupId>
-            <artifactId>asm</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.jboss.netty</groupId>
-            <artifactId>netty</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.sonatype.sisu.inject</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-client</artifactId>
-        <version>${hadoop.version}</version>
-        <exclusions>
-          <exclusion>
             <groupId>asm</groupId>
             <artifactId>asm</artifactId>
           </exclusion>
@@ -341,32 +301,20 @@
       </dependency>
       <dependency>
         <groupId>org.bdgenomics.adam</groupId>
-        <artifactId>adam-core</artifactId>
+        <artifactId>adam-core_2.10</artifactId>
         <version>${adam.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.bdgenomics.bdg-utils</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.bdgenomics.adam</groupId>
-        <artifactId>adam-core</artifactId>
+        <artifactId>adam-core_2.10</artifactId>
         <version>${adam.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>org.bdgenomics.bdg-utils</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.scalatest</groupId>
-        <artifactId>scalatest_${scala.version.prefix}</artifactId>
-        <version>1.9.2</version>
+        <artifactId>scalatest_2.10</artifactId>
+        <version>2.2.2</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -381,24 +329,13 @@
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-core_${scala.version.prefix}</artifactId>
+        <artifactId>spark-core_2.10</artifactId>
         <version>${spark.version}</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-mllib_${scala.version.prefix}</artifactId>
-        <version>${spark.version}</version>
-        <scope>provided</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.spark</groupId>
-        <artifactId>spark-mllib_${scala.version.prefix}</artifactId>
-        <version>${spark.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.spark</groupId>
-        <artifactId>spark-graphx_${scala.version.prefix}</artifactId>
+        <artifactId>spark-mllib_2.10</artifactId>
         <version>${spark.version}</version>
         <scope>provided</scope>
       </dependency>

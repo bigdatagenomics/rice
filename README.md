@@ -1,4 +1,4 @@
-RNAdam
+rice
 ======
 
-An RNA fusion transcript pipeline built on top of ADAM. Apache 2 licensed.
+An RNA quantification pipeline built on top of ADAM. Apache 2 licensed.
