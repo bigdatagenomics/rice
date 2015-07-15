@@ -28,13 +28,23 @@ private[RNAdam] object Timers extends Metrics {
   val LoadingTwoBit = timer("Loading Two Bit File")
   val LoadingGenes = timer("Loading gene descriptions")
   val Indexing = timer("Indexing k-mers")
-  val Saving = timer("Saving index")
+  val SavingKmers = timer("Saving index - kmer map")
+  val SavingClasses = timer("Saving index - class map")
 
   // Indexing
+  val Broadcast = timer("Broadcasting Reference File")
   val Extract = timer("Extracting Transcript from Reference")
   val SplitKmers = timer("Splitting k-mers from Transcript")
   val GenerateClasses = timer("Generating Equivalence Classes")
   val GenerateIndices = timer("Mapping Equivalence Classes to Indices")
+
+  // Additional Indexing Timers
+  val KmersAndTranscript = timer("Sorting Kmers By Transcript")
+  val CollectingKmersByCount = timer("Collecting kmers by count (ReduceByKey)")
+  val SortByTranscript = timer("Sorting kmers by transcript (Map)")
+  val CollectingKmersByTranscript = timer("Collecting kmers by transcript (GroupByKey)")
+  val DistillingEqClasses = timer("Mapping collected groups into equivalence classes")
+  val NumberingEqClasses = timer("Numbering equivalence classes")
 
   // Quantification
   val ExtractTranscriptLengths = timer("Extraction Transcript Lengths")
